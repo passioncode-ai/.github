@@ -29,6 +29,15 @@ Early beta: macOS is Developer ID signed but not notarized. Windows is unsigned 
 cross-built; native Windows execution and live-provider acceptance have not yet been
 verified. The download page and release notes describe the installation requirements.
 
+## Inbox · development preview
+
+**Fabric Inbox** is our desktop mail client. It brings supported accounts into one
+workspace, with a combined message list and an account filter. Cloudflare and Gmail
+are implemented in the development preview; general IMAP and Outlook are planned.
+There is no public release or signed download yet.
+
+**[Explore Fabric Inbox →](https://passioncode.ai/inbox/)**
+
 ## Fabric is in development
 
 **Stop managing agents one by one. Start operating projects.**
@@ -43,12 +52,14 @@ is not available as a public download yet.
 | Project | Role | Status |
 |---|---|---|
 | [Switchboard](https://github.com/passioncode-ai/fabric-switchboard) | Local Claude Code and Codex account manager | Public · MIT · beta downloads |
+| [Fabric Inbox](https://passioncode.ai/inbox/) | Desktop mail and account-scoped automation | Private development · no public download |
+| [Project Observatory](https://passioncode.ai/observatory/) | Project inventory and change visibility | Public product information |
 | Fabric | CEO AI agent and its technical foundation | Private development |
 | Agent Contract / Agent Adapter | Supporting compatibility and integration work | Private development |
 | [PassionCode.ai](https://passioncode.ai/) | Public home and product pages | Live website |
 
 One family, one visual language. [Our design system](https://passioncode.ai/design-system/)
-provides shared dark surfaces, yellow action accents and reusable tokens. Switchboard
-uses its own S mark; the passion fruit remains the PassionCode family mark.
+provides shared white and dark themes, yellow action accents and reusable tokens.
+Switchboard and Inbox use their own product marks; the passion fruit remains the PassionCode family mark.
 
 <p align="center"><em>Where people and agents run the business together.</em></p>
