@@ -7,52 +7,48 @@
 <h1 align="center">PassionCode.ai</h1>
 
 <p align="center"><strong>From vibe coding to passion coding.</strong></p>
-<p align="center"><strong>PassionCode.ai — The agent-agnostic operating system for AI-native teams.</strong></p>
+<p align="center"><strong>PassionCode.ai — A toolkit for AI-native work.</strong></p>
 
-Vibe coding puts you in charge of prompts, chats and agent tasks. Passion coding moves
-the control point up one level.
+Tools for working with AI agents, starting with something you can use today.
+**Switchboard** is our open-source local account manager for Claude Code and Codex CLI.
+**Fabric** is the CEO AI agent we are developing to coordinate agents and projects.
+
+## Start with Switchboard
+
+Manage accounts in separate work and personal pools, inspect reported usage limits,
+and select which account handles the next managed request. Use the desktop app or the
+`switchboard` CLI. Saved credentials use macOS Keychain or Windows DPAPI.
+
+**[Explore Switchboard and download the beta →](https://passioncode.ai/switchboard/)**
+
+- [Download for macOS](https://passioncode.ai/switchboard/download/macos) · Apple silicon + Intel, macOS 14+.
+- [Download for Windows](https://passioncode.ai/switchboard/download/windows) · x64 installer + CLI.
+- [Read the MIT source](https://github.com/passioncode-ai/fabric-switchboard) · [Releases and checksums](https://github.com/passioncode-ai/fabric-switchboard/releases).
+
+Early beta: macOS is Developer ID signed but not notarized. Windows is unsigned and
+cross-built; native Windows execution and live-provider acceptance have not yet been
+verified. The download page and release notes describe the installation requirements.
+
+## Fabric is in development
 
 **Stop managing agents one by one. Start operating projects.**
 
-A Project keeps its purpose, accountable team, roles, routines, authority, work,
-evidence and feedback loop together — from zero to one and beyond. People decide what
-requires human judgment. Agents observe, propose and execute within explicit boundaries.
-The agent can change; the Project's operating model and history stay.
+Fabric is the CEO AI agent we are building around that direction. Its current focus is
+agent management: keeping context, work and decisions together. The longer-term aim is
+to coordinate projects while people remain accountable for goals and authority. Fabric
+is not available as a public download yet.
 
-## What changes
+## The toolkit
 
-- **Prompts become Project intent.** Purpose and scope stop living in the latest chat.
-- **Agent tasks become operating loops.** Observe, propose, decide, execute, verify and
-  learn become one accountable lifecycle.
-- **Agent choice becomes replaceable implementation.** The role, routines and history
-  remain when a Provider changes.
-- **Automation becomes bounded.** People set authority; every important effect returns
-  with evidence.
-
-## The system
-
-| Repository | Role | Status |
+| Project | Role | Status |
 |---|---|---|
-| `passioncode-ai.github.io` | Public narrative and [passioncode.ai](https://passioncode.ai/) | public |
-| `fabric` | Product foundation and agent-agnostic technical kernel | private development |
-| `fabric-agent-contract` | Compatibility boundary for independent agents and Providers | private foundation |
-| `fabric-agent-adapter` | Portable path for adapting or creating a compatible Provider | private repository |
+| [Switchboard](https://github.com/passioncode-ai/fabric-switchboard) | Local Claude Code and Codex account manager | Public · MIT · beta downloads |
+| Fabric | CEO AI agent and its technical foundation | Private development |
+| Agent Contract / Agent Adapter | Supporting compatibility and integration work | Private development |
+| [PassionCode.ai](https://passioncode.ai/) | Public home and product pages | Live website |
 
-## How work moves
-
-**Observe → propose → decide → execute → verify → learn → observe again.**
-
-Deterministic workflows carry repeatable work. Agents handle open-ended judgment.
-People receive decisions and effects that require human authority. Evidence stays
-attached across every handoff.
-
-## Current status
-
-The public PassionCode.ai surface and the private Fabric foundation are in active
-development. The hosted PassionCode.ai product is not publicly available yet.
-
-<p align="center">
-  <a href="https://passioncode.ai/"><strong>Explore PassionCode.ai →</strong></a>
-</p>
+One family, one visual language. [Our design system](https://passioncode.ai/design-system/)
+provides shared dark surfaces, yellow action accents and reusable tokens. Switchboard
+uses its own S mark; the passion fruit remains the PassionCode family mark.
 
 <p align="center"><em>Where people and agents run the business together.</em></p>
