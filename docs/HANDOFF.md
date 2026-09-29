@@ -1,3 +1,21 @@
+# Profile handoff · names (ADR-0090) and the default contribution guide · 2026-09-29
+
+Objective: the organisation's names and the read-first contribution rule (Fabric
+[ADR-0090](https://github.com/passioncode-ai/fabric) and the agent-registry run, module AR-0).
+
+- `profile/README.md`: the intro now names Fabric first as the product (the CEO AI agent, early
+  preview for macOS) and its tools by their full names — Fabric Switchboard, Fabric Dashboards —
+  each working on its own; Project Observatory is described alongside them as speaking Fabric's
+  protocol and running without it. Taglines, licence lines and every other section unchanged.
+- `CONTRIBUTING.md` (new): GitHub's default contribution guide for every repository of the
+  organisation without its own — read the repository's `AGENTS.md` first; the names; how a change
+  lands; code region markers; the recommended shared tools (sshlg-skills, the
+  `@passioncode-ai/passioncode` launcher); private security reporting.
+- Checks: `git diff --check` clean; public link targets answer (npmjs.com blocks bots with 403;
+  org-index answers 404 anonymously because it is private, as the text says).
+- Next: after merge, confirm anonymously that a repository without its own guide shows this one
+  in its "Contributing" link.
+
 # Profile handoff · source-available wording, Observatory and Fabric Dashboards · 2026-09-29
 
 Objective: apply the operator's 2026-09-29 decisions to the organisation profile. Switchboard,

@@ -9,11 +9,12 @@
 <p align="center"><strong>From vibe coding to passion coding.</strong></p>
 <p align="center"><strong>PassionCode.ai — A toolkit for AI-native teams.</strong></p>
 
-Tools for working with AI agents, starting with what you can use today.
-**Switchboard** is a local account manager for Claude Code and Codex CLI.
-**Project Observatory** is a local dashboard for the projects your agents work on.
+**Fabric** is the CEO AI agent we are developing to coordinate agents and projects — now an
+early preview for macOS. Its tools ship first, and each works on its own:
+**Fabric Switchboard** is a local account manager for Claude Code and Codex CLI.
 **Fabric Dashboards** shows the local agent services on your Mac in one window.
-**Fabric** is the CEO AI agent we are developing to coordinate agents and projects — now an early preview for macOS.
+Alongside them, **Project Observatory** is a local dashboard for the projects your agents work
+on; it speaks Fabric's protocol and runs without it.
 
 Switchboard, Project Observatory and Fabric Dashboards are source-available under PolyForm
 Noncommercial or Internal Use; a commercial license is available on request from
