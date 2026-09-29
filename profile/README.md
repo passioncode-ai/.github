@@ -11,7 +11,7 @@
 
 Tools for working with AI agents, starting with something you can use today.
 **Switchboard** is our open-source local account manager for Claude Code and Codex CLI.
-**Fabric** is the CEO AI agent we are developing to coordinate agents and projects.
+**Fabric** is the CEO AI agent we are developing to coordinate agents and projects — now an early preview for macOS.
 
 ## Start with Switchboard
 
@@ -38,14 +38,21 @@ There is no public release or signed download yet.
 
 **[Explore Fabric Inbox →](https://passioncode.ai/inbox/)**
 
-## Fabric is in development
+## Fabric · early preview
 
 **Stop managing agents one by one. Start operating projects.**
 
 Fabric is the CEO AI agent we are building around that direction. Its current focus is
 agent management: keeping context, work and decisions together. The longer-term aim is
-to coordinate projects while people remain accountable for goals and authority. Fabric
-is not available as a public download yet.
+to coordinate projects while people remain accountable for goals and authority.
+
+**[Explore Fabric and download the early preview →](https://passioncode.ai/fabric/)**
+
+- [Download for macOS](https://passioncode.ai/fabric/download/macos) · Apple silicon, macOS 13+, DMG · [release notes and checksum](https://github.com/passioncode-ai/passioncode-ai.github.io/releases/tag/fabric-v0.2.0).
+
+Early preview 0.2.0: Developer ID signed and notarized. It needs Docker and the Supabase
+CLI for its local database. The conversation with Fabric saves messages but does not
+reply yet. Fabric's source is private.
 
 ## The toolkit
 
@@ -54,7 +61,7 @@ is not available as a public download yet.
 | [Switchboard](https://github.com/passioncode-ai/fabric-switchboard) | Local Claude Code and Codex account manager | Public · MIT · beta downloads |
 | [Fabric Inbox](https://passioncode.ai/inbox/) | Desktop mail and account-scoped automation | Private development · no public download |
 | [Project Observatory](https://passioncode.ai/observatory/) | Project inventory and change visibility | Public product information |
-| Fabric | CEO AI agent and its technical foundation | Private development |
+| [Fabric](https://passioncode.ai/fabric/) | CEO AI agent and its technical foundation | Private source · macOS early preview |
 | Agent Contract / Agent Adapter | Supporting compatibility and integration work | Private development |
 | [PassionCode.ai](https://passioncode.ai/) | Public home and product pages | Live website |
 
