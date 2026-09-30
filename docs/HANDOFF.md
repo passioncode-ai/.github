@@ -1,3 +1,35 @@
+# Profile handoff · AGPL-3.0 (ADR-0092), the knowledge base first (ADR-0093), the repository standard · 2026-09-30
+
+Objective: the organization's defaults and profile say what the operator decided on 2026-09-30,
+and this repository carries the repository standard (fabric-workspace `knowledge/repository-standard.md`).
+
+- `CONTRIBUTING.md` (inherited by every repository without its own): read first — 1. the
+  knowledge base, 2. the repository's `AGENTS.md`, 3. this file; a new "After work" section
+  (update the knowledge base page that owns a changed cross-repository fact, land, publish); rules
+  and the standard now link `knowledge/rules.md` and `knowledge/repository-standard.md` instead of
+  org-index `RULES.md`; names link `knowledge/principles.md §2`; a license section per
+  `knowledge/licensing.md` (AGPL-3.0 or commercial, CLA). The license section says "licensed
+  under", not "open source", because this file is read in private repositories too (CO-KB-01).
+- `.github/pull_request_template.md` (new): the organization's default template with the CLA box
+  the rules require. Not verified yet in a repository without its own template.
+- `profile/README.md`: the license paragraph — open source under AGPL-3.0, a commercial license
+  from contact@passioncode.ai, released versions keep MIT or PolyForm; table cells
+  "source-available" → "AGPL-3.0". Also corrected against the website's facts: Switchboard's macOS
+  build is notarized (0.4.0-beta.1 receipt), "Fabric Inbox" in its heading, and Fabric Agent Adapter
+  listed as public (it is, per org-index `repositories.json`), Fabric Agent Contract as private.
+  Copy through super-ux `copywriting` against the website's brand pack.
+- Standard: `LICENSE`, `COMMERCIAL-LICENSE.md`, `CLA.md` from the knowledge base templates,
+  `SECURITY.md` (also the organization default), `README.md` quick start and License,
+  `AGENTS.md` in the template shape.
+- Checks: `git diff --check` exit 0; org-index `check_format.py --offline` 8 → 0 findings,
+  `check_names.py --offline` 0; link targets checked (see the PR).
+- Next task: after merge, run org-index `python3 scripts/check_format.py --repo .github` (online)
+  and confirm anonymously that https://github.com/passioncode-ai shows the new license paragraph;
+  keep the version cells (Observatory 0.8.1, Fabric Dashboards 0.1.0) in step with the website's
+  facts when the site's release sync lands.
+
+---
+
 # Profile handoff · names (ADR-0090) and the default contribution guide · 2026-09-29
 
 Objective: the organisation's names and the read-first contribution rule (Fabric

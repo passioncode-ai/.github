@@ -16,10 +16,11 @@ early preview for macOS. Its tools ship first, and each works on its own:
 Alongside them, **Project Observatory** is a local dashboard for the projects your agents work
 on; it speaks Fabric's protocol and runs without it.
 
-Switchboard, Project Observatory and Fabric Dashboards are source-available under PolyForm
-Noncommercial or Internal Use; a commercial license is available on request from
-contact@passioncode.ai. Releases already published under MIT stay under MIT: Switchboard up
-to 0.3.1-beta.1, Project Observatory up to 0.8.1 and Fabric Dashboards 0.1.0.
+Switchboard, Project Observatory and Fabric Dashboards are open source under AGPL-3.0. For
+use the AGPL doesn't cover, a commercial license is available from contact@passioncode.ai.
+Released versions keep their license: MIT up to Switchboard 0.3.1-beta.1, Project Observatory
+0.8.1 and Fabric Dashboards 0.1.0, and PolyForm Noncommercial or Internal Use for the releases
+made after them and before the move to AGPL.
 
 ## Start with Switchboard
 
@@ -33,7 +34,7 @@ and select which account handles the next managed request. Use the desktop app o
 - [Download for Windows](https://passioncode.ai/switchboard/download/windows) · x64 installer + CLI.
 - [Read the source](https://github.com/passioncode-ai/fabric-switchboard) · [Releases and checksums](https://github.com/passioncode-ai/fabric-switchboard/releases).
 
-Early beta: macOS is Developer ID signed but not notarized. Windows is unsigned and
+Early beta: macOS is Developer ID signed and notarized. Windows is unsigned and
 cross-built; native Windows execution and live-provider acceptance have not yet been
 verified. The download page and release notes describe the installation requirements.
 
@@ -55,7 +56,7 @@ through launchd, and its dashboard inside the app.
 
 - [Download 0.1.0](https://github.com/passioncode-ai/fabric-dashboards/releases/tag/v0.1.0) · macOS 13+, Apple silicon + Intel, DMG, Developer ID signed and notarized · [source](https://github.com/passioncode-ai/fabric-dashboards).
 
-## Inbox · in development
+## Fabric Inbox · in development
 
 **Fabric Inbox** is a desktop mail client in development for the PassionCode family.
 Cloudflare and Gmail are implemented in the preview; a shared account interface is in
@@ -84,12 +85,13 @@ reply yet. Fabric's source is private.
 
 | Project | Role | Status |
 |---|---|---|
-| [Switchboard](https://github.com/passioncode-ai/fabric-switchboard) | Local Claude Code and Codex account manager | Public · source-available · beta downloads |
-| [Project Observatory](https://github.com/passioncode-ai/project-observatory-dashboard) | Local dashboard for your agents' projects | Public · source-available · release 0.8.1 |
-| [Fabric Dashboards](https://github.com/passioncode-ai/fabric-dashboards) | Local agent services on a Mac in one window | Public · source-available · release 0.1.0 |
+| [Switchboard](https://github.com/passioncode-ai/fabric-switchboard) | Local Claude Code and Codex account manager | Public · AGPL-3.0 · beta downloads |
+| [Project Observatory](https://github.com/passioncode-ai/project-observatory-dashboard) | Local dashboard for your agents' projects | Public · AGPL-3.0 · release 0.8.1 |
+| [Fabric Dashboards](https://github.com/passioncode-ai/fabric-dashboards) | Local agent services on a Mac in one window | Public · AGPL-3.0 · release 0.1.0 |
 | [Fabric Inbox](https://passioncode.ai/inbox/) | Desktop mail client | Private development · no public download |
 | [Fabric](https://passioncode.ai/fabric/) | CEO AI agent and its technical foundation | Private source · macOS early preview |
-| Agent Contract / Agent Adapter | Supporting compatibility and integration work | Private development |
+| [Fabric Agent Adapter](https://github.com/passioncode-ai/fabric-agent-adapter) | Makes an agent Fabric-compatible | Public · AGPL-3.0 |
+| Fabric Agent Contract | The protocol the adapter implements | Private development |
 | [PassionCode.ai](https://passioncode.ai/) | Public home and product pages | Live website |
 
 One family, one visual language. [Our design system](https://passioncode.ai/design-system/)

@@ -3,20 +3,39 @@
 This is the default contribution guide for every repository of the `passioncode-ai`
 organization. A repository with its own `CONTRIBUTING.md` adds to it; where the two differ, the
 repository's own file wins. It is written for people and for coding agents alike — **an agent
-reads this file and the repository's `AGENTS.md` before its first edit, in every repository,
-every time.**
+reads the knowledge base, the repository's `AGENTS.md` and this file before its first edit, in
+every repository, every time.**
 
 ## 1. Read first, in this order
 
-1. **The repository's `AGENTS.md`** (its `CLAUDE.md` imports it): what the repository is, the exact
+1. **The knowledge base**: `fabric-workspace/knowledge/` in your clone (org-index
+   `scripts/clone_all.sh` makes it), or
+   [knowledge/README.md](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/README.md)
+   on GitHub (private: organization members). At least its vision, principles and how to work.
+2. **The repository's `AGENTS.md`** (its `CLAUDE.md` imports it): what the repository is, the exact
    commands that test a change, and its local rules.
-2. **This file**: the rules every repository shares.
-3. **How the system works** — organization members: [Fabric Workspace](https://wiki.passioncode.ai/),
-   the wiki of every tool (Fabric, its protocols, MCP, the agents), and the organization's rules
-   in [org-index](https://github.com/passioncode-ai/org-index) (`RULES.md`). Both are private;
-   outside contributors work from the repository's own documents.
+3. **This file**: what every repository shares.
 
-## 2. Names
+The organization's working rules — branches, CI, coordination, secrets, handoffs — are
+[knowledge/rules.md](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/rules.md),
+and the files every repository carries are the
+[repository standard](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/repository-standard.md).
+Outside contributors, who cannot open the knowledge base, work from the repository's own
+documents and this file.
+
+## 2. After work
+
+In the same run, before you call the work done:
+
+1. update the repository's own docs in the change that changes the behaviour;
+2. if a fact that crosses repositories changed — a product, a version, a plan row, a principle,
+   a rule — update the knowledge base page that owns it;
+3. land both, then publish: `node scripts/workspace.mjs sync` from a Fabric checkout, or leave it
+   to the scheduled sync ([how to work → publishing](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/how-to-work.md#publishing)).
+
+Leave a tracked handoff with the exact next task, not a chat message.
+
+## 3. Names
 
 | Name | What it is |
 |---|---|
@@ -24,22 +43,26 @@ every time.**
 | **Fabric** | the product: the CEO AI agent — the desktop app and its engine |
 | **Fabric Inbox**, **Fabric Dashboards**, **Fabric Switchboard**, **Fabric VR** | Fabric's tools; each also works on its own. Use the full name before the short one |
 | **Fabric Agent Contract**, **Fabric Agent Adapter** | what makes any agent Fabric-compatible; protocol ids stay lowercase (`fabric-service/0.1`) |
-| **Fabric Workspace** | the wiki of how every tool works |
+| **Fabric Workspace** | the wiki of how every tool works, and the knowledge base |
 | **Project Observatory** | a PassionCode.ai product; Fabric-compatible, works without Fabric |
 
-Never "PassionCode app", never "Passion Code".
+Never "PassionCode app", never "Passion Code". The knowledge base
+[principles §2](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/principles.md#2-names)
+owns this list; org-index `scripts/check_names.py` checks it.
 
-## 3. How a change lands
+## 4. How a change lands
 
 - Work in a worktree from `origin/main` on your own branch (`<who>/<topic>`). A checkout can be
   shared by several people or agents: never switch, reset or stash someone else's work.
 - Run the repository's gate (named in its `AGENTS.md`) and read its exit code before you push. A
   check that did not run is not a green check.
+- Land by the repository's rule: a pull request, or a fast-forward after its local gate passes
+  ([rules §2](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/rules.md#2-branches-commits-landing)).
 - Never force-push `main`, never move a released tag. A mistake gets a new commit or a new tag.
 - Documentation changes in the same commit as the code it describes.
 - No secrets, tokens or machine paths in any commit, issue or log.
 
-## 4. Mark the code you write
+## 5. Mark the code you write
 
 A feature, a module or a special condition is fenced, and the fence points at its documentation,
 so the next reader — person or agent — lands on the documented truth and can check the code
@@ -55,7 +78,23 @@ Any comment leader works (`//`, `#`, `--`, `/*`, `<!--`). The reference is repos
 relative and must resolve; repositories that ship the check (`check-regions`) fail a region that
 is unclosed or whose reference does not open.
 
-## 5. Recommended tools
+## 6. License and your contribution
+
+Every PassionCode.ai repository is licensed under the
+[GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) (its `LICENSE`), or under a commercial
+license from PassionCode.ai for use that does not meet the AGPL's terms (its
+`COMMERCIAL-LICENSE.md`) — contact@passioncode.ai. SPDX:
+`AGPL-3.0-only OR LicenseRef-PassionCode-Commercial`. A version released earlier keeps the license
+it was released under, and third-party code keeps its own.
+
+A contribution is accepted under the repository's `CLA.md`: tick the box in the pull request
+template — the repository's own, or the organization's default in
+[`.github`](https://github.com/passioncode-ai/.github/blob/main/.github/pull_request_template.md).
+The CLA lets PassionCode.ai offer your contribution under both licenses; without it a pull request
+is not merged. What each license means for users and contributors:
+[knowledge/licensing.md](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/licensing.md).
+
+## 7. Recommended tools
 
 A shared base keeps the process and the documentation format the same across repositories and
 people, which removes a whole class of mistakes. Adapt it to your own style; keep the base.
@@ -67,6 +106,6 @@ people, which removes a whole class of mistakes. Adapt it to your own style; kee
   every PassionCode.ai skill for every agent on the machine, including `working-in-passioncode`
   (the organization's rules as a skill). Install: `npx @passioncode-ai/passioncode@latest update`.
 
-## 6. Security
+## 8. Security
 
 Report a vulnerability privately to contact@passioncode.ai, not in a public issue.
