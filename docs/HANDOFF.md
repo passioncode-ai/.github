@@ -23,11 +23,13 @@ and this repository carries the repository standard (fabric-workspace `knowledge
   `AGENTS.md` in the template shape.
 - Checks: `git diff --check` exit 0; org-index `check_format.py --offline` 8 → 0 findings,
   `check_names.py --offline` 0; link targets checked (see the PR).
-- Next task: after merge, run org-index `python3 scripts/check_format.py --repo .github` (online)
-  and confirm anonymously that https://github.com/passioncode-ai shows the new license paragraph;
-  keep the version cells (Observatory 0.8.1, Fabric Dashboards 0.1.0) in step with the website's
-  facts when the site's release sync lands.
-
+- Landed: fast-forward to `main` (`1fb1013`, PR #4) after the four public products' `main` carried
+  the AGPL `LICENSE`. After merge: org-index `check_format.py` (online) 0 findings for `.github`;
+  https://github.com/passioncode-ai shows "open source under AGPL-3.0" anonymously; the PR template
+  link answers 200.
+- Next task: keep the version cells (Observatory 0.8.1, Fabric Dashboards 0.1.0) in step with the
+  website's facts when the site's release sync lands; confirm in a repository without its own
+  template that a new pull request opens with the CLA box.
 ---
 
 # Profile handoff · names (ADR-0090) and the default contribution guide · 2026-09-29
