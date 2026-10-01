@@ -40,8 +40,9 @@ After merge, confirm anonymously that https://github.com/passioncode-ai serves t
 - License wording follows Fabric ADR-0092 and the knowledge base
   [licensing](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/licensing.md):
   a product with public source is "open source under AGPL-3.0" with a commercial license
-  available; Fabric and Fabric Inbox, whose source is private, are never called open source or
-  AGPL; MIT and PolyForm name only released versions.
+  available — every product the profile lists, Fabric and Fabric Inbox included since their
+  repositories became public on 2026-09-30; a private repository (Fabric Workspace, org-index) is
+  never linked from the profile; MIT and PolyForm name only released versions.
 - `CONTRIBUTING.md` is inherited by every repository: it links to the knowledge base for anything
   the knowledge base owns (rules, standard, names, licensing) instead of copying it. A change to
   this repository's role updates its row in org-index `repositories.json` in the same change.

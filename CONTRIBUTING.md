@@ -45,6 +45,7 @@ Leave a tracked handoff with the exact next task, not a chat message.
 | **Fabric Agent Contract**, **Fabric Agent Adapter** | what makes any agent Fabric-compatible; protocol ids stay lowercase (`fabric-service/0.1`) |
 | **Fabric Workspace** | the wiki of how every tool works, and the knowledge base |
 | **Project Observatory** | a PassionCode.ai product; Fabric-compatible, works without Fabric |
+| **Okolos** | a PassionCode.ai product: browser security for the age of AI agents |
 
 Never "PassionCode app", never "Passion Code". The knowledge base
 [principles §2](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/principles.md#2-names)
