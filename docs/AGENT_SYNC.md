@@ -1,4 +1,4 @@
-<!-- agent-sync:generated source=.github@cc914af cfg=5fb977acfa58 at=2026-09-30T23:50:34Z — regenerate with `agent_sync.py setup`, do not hand-edit -->
+<!-- agent-sync:generated source=.github@2cffe29 cfg=7d8ca413350d at=2026-10-01T15:52:11Z — regenerate with `agent_sync.py setup`, do not hand-edit -->
 
 # How documentation and coordination work in .github
 
@@ -29,6 +29,8 @@ None declared here. Ids live in the parent repository; reserve them there.
 
 - `profile/README.md`
 - `CONTRIBUTING.md`
+- `docs/backlog-sources.json`
+- `docs/backlog.md`
 
 ### Gates run before a change is considered done
 

@@ -9,15 +9,18 @@
 <p align="center"><strong>From vibe coding to passion coding.</strong></p>
 <p align="center"><strong>PassionCode.ai — A toolkit for AI-native teams.</strong></p>
 
-**PassionCode.ai is the organization; its toolkit is for AI-native teams.** **Fabric** is the
-product: the CEO AI agent that plans, coordinates agents and runs projects — an early preview for
-macOS. It grows through its own tools, and each of them also works on its own: **Fabric
-Switchboard** manages Claude Code and Codex CLI accounts, **Fabric Dashboards** shows the local
-agent services on your Mac in one window, **Fabric Inbox** puts the mail that needs you first, and
-**Fabric VR** brings Fabric's surfaces to Meta Quest. The **Fabric Agent Contract** and the
-**Fabric Agent Adapter** make any agent Fabric-compatible. Beside Fabric, PassionCode.ai builds
-**Project Observatory**, a local dashboard for the projects your agents work on, which speaks
-Fabric's protocol and runs without it, and **Okolos**, browser security for the age of AI agents.
+**Your agents. Your tools. Your way of working.** PassionCode.ai builds a workplace for
+AI-native teams: accounts, local services, project evidence and mail that you can arrange
+around your workflow. Start with a tool that solves today's problem; each works on its own.
+
+**Fabric** is the coordinating agent we are building around that workplace, currently an early
+macOS preview. Complete project coordination is still in development. **Fabric Switchboard**
+manages Claude Code and Codex CLI accounts; **Fabric Dashboards** shows and controls local agent
+services; **Fabric Inbox** brings Gmail and Cloudflare mail together with configurable reply
+policies; **Project Observatory** provides project evidence and findings. The **Fabric Agent
+Contract** and **Fabric Agent Adapter** connect compatible agents and services. **Fabric VR**
+currently captures notes on Quest, with remote Fabric surfaces planned; **Okolos** provides
+browser security from source, with no published installable release yet.
 
 Every product here is open source under AGPL-3.0. For use the AGPL doesn't cover, a commercial
 license is available from contact@passioncode.ai. Released versions keep the license they shipped with:
@@ -37,7 +40,7 @@ use macOS Keychain or Windows DPAPI.
 
 - [Download for macOS](https://passioncode.ai/switchboard/download/macos) · Apple silicon + Intel, macOS 14+.
 - [Download for Windows](https://passioncode.ai/switchboard/download/windows) · x64 installer + CLI.
-- [Read the source](https://github.com/passioncode-ai/fabric-switchboard) · [Releases and checksums](https://github.com/passioncode-ai/fabric-switchboard/releases) · beta 0.4.0-beta.1.
+- [Read the source](https://github.com/passioncode-ai/fabric-switchboard) · [Releases and checksums](https://github.com/passioncode-ai/fabric-switchboard/releases) · beta 0.4.1-beta.1.
 
 Early beta: macOS is Developer ID signed and notarized. Windows is unsigned and
 cross-built; native Windows execution and live-provider acceptance have not yet been
@@ -52,7 +55,7 @@ find unknown secrets.
 
 **[Explore Project Observatory →](https://passioncode.ai/observatory/)**
 
-- [Read the source](https://github.com/passioncode-ai/project-observatory-dashboard) · [Releases](https://github.com/passioncode-ai/project-observatory-dashboard/releases) · latest 0.9.1.
+- [Read the source](https://github.com/passioncode-ai/project-observatory-dashboard) · [Releases](https://github.com/passioncode-ai/project-observatory-dashboard/releases) · latest 0.10.0.
 
 ## Fabric Dashboards · available now
 
@@ -60,7 +63,7 @@ One window for the local agent services on your Mac that speak `fabric-service/0
 including Project Observatory's server: each service's state, start, stop and restart
 through launchd, and its dashboard inside the app. Agents drive it over MCP.
 
-- [Download 0.3.0](https://github.com/passioncode-ai/fabric-dashboards/releases/tag/v0.3.0) · macOS 13+, Apple silicon + Intel, DMG, Developer ID signed and notarized · [source](https://github.com/passioncode-ai/fabric-dashboards).
+- [Download 0.3.1](https://github.com/passioncode-ai/fabric-dashboards/releases/tag/v0.3.1) · macOS 13+, Apple silicon + Intel, DMG, Developer ID signed and notarized · [source](https://github.com/passioncode-ai/fabric-dashboards).
 
 ## Fabric Inbox · development preview
 

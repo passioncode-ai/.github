@@ -9,7 +9,9 @@
   "idRegisters": {},
   "guardedFiles": [
     "profile/README.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "docs/backlog-sources.json",
+    "docs/backlog.md"
   ],
   "claimTags": {},
   "gates": [

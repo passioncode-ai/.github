@@ -35,6 +35,17 @@ In the same run, before you call the work done:
 
 Leave a tracked handoff with the exact next task, not a chat message.
 
+## Shared backlog
+
+Each repository declares canonical local task sources in `docs/backlog-sources.json`.
+Read the [backlog contract](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/backlog.md)
+and the repository's declared source before starting work. Update task status in that owner
+under its coordination lease, retain stable IDs and closure receipts, and add new sources to
+the manifest. Cross-repository tasks have one owner; dependent repositories link to that row.
+The [workspace backlog](https://wiki.passioncode.ai/backlog) combines these sources with their
+vision goals and source commits. It is derived, never a second editable task register.
+After landing, publish through Fabric's workspace sync and verify the recorded source commit.
+
 ## 3. Names
 
 | Name | What it is |
