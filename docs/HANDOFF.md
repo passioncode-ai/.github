@@ -1,3 +1,25 @@
+# Profile handoff · final check: every public product, current releases · 2026-10-01
+
+Objective: the profile follows ADR-0090 and lists every public product with a working link, a
+one-line description and its current release; the defaults are right for AGPL + CLA.
+
+- `profile/README.md`: intro in ADR-0090 terms (organization → Fabric, the CEO AI agent → its
+  tools → compatibility layer → Project Observatory and Okolos beside Fabric); Fabric and Fabric
+  Inbox public since 2026-09-30, so "Fabric's source is private" and "Inbox: private development,
+  no public download" were false — Inbox now has its 0.8.2 download section; versions
+  Observatory 0.8.1 → 0.9.1, Dashboards 0.1.0 → 0.3.0; the toolkit table lists all eleven public
+  product repositories plus the site (licence on `main` read for each: AGPL); the licence-history
+  sentence names the PolyForm releases too.
+- `CONTRIBUTING.md`: Okolos added to the names table. License section (AGPL or commercial, CLA,
+  released versions keep theirs) checked and unchanged. `SECURITY.md` unchanged.
+- `AGENTS.md`: the licence rule no longer says Fabric and Inbox are private.
+- Checks: `git diff --check` 0; org-index `check_format.py`, `check_names.py`, `check_private.py`
+  and `gitleaks detect --no-git` (see the PR); every public link 200/302 anonymously.
+- Next task: when a product publishes a new release, update its row here in the same pass as the
+  website's `docs/brand/facts.md`.
+
+---
+
 # Profile handoff · AGPL-3.0 (ADR-0092), the knowledge base first (ADR-0093), the repository standard · 2026-09-30
 
 Objective: the organization's defaults and profile say what the operator decided on 2026-09-30,
