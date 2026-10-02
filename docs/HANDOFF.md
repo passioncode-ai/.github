@@ -32,8 +32,9 @@ and this repository carries the repository standard (fabric-workspace `knowledge
   org-index `RULES.md`; names link `knowledge/principles.md §2`; a license section per
   `knowledge/licensing.md` (AGPL-3.0 or commercial, CLA). The license section says "licensed
   under", not "open source", because this file is read in private repositories too (CO-KB-01).
-- `.github/pull_request_template.md` (new): the organization's default template with the CLA box
-  the rules require. Not verified yet in a repository without its own template.
+- `.github/pull_request_template.md` (new): the organization's default template. It first carried
+  a CLA box; since 2026-10-02 there is none — opening the pull request is the agreement, and the
+  template says so.
 - `profile/README.md`: the license paragraph — open source under AGPL-3.0, a commercial license
   from contact@passioncode.ai, released versions keep MIT or PolyForm; table cells
   "source-available" → "AGPL-3.0". Also corrected against the website's facts: Switchboard's macOS
@@ -51,7 +52,7 @@ and this repository carries the repository standard (fabric-workspace `knowledge
   link answers 200.
 - Next task: keep the version cells (Observatory 0.8.1, Fabric Dashboards 0.1.0) in step with the
   website's facts when the site's release sync lands; confirm in a repository without its own
-  template that a new pull request opens with the CLA box.
+  template that a new pull request opens with the CLA sentence (no box since 2026-10-02).
 ---
 
 # Profile handoff · names (ADR-0090) and the default contribution guide · 2026-09-29
