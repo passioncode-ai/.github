@@ -99,11 +99,9 @@ license from PassionCode.ai for use that does not meet the AGPL's terms (its
 `AGPL-3.0-only OR LicenseRef-PassionCode-Commercial`. A version released earlier keeps the license
 it was released under, and third-party code keeps its own.
 
-A contribution is accepted under the repository's `CLA.md`: tick the box in the pull request
-template — the repository's own, or the organization's default in
-[`.github`](https://github.com/passioncode-ai/.github/blob/main/.github/pull_request_template.md).
-The CLA lets PassionCode.ai offer your contribution under both licenses; without it a pull request
-is not merged. What each license means for users and contributors:
+A contribution is accepted under the repository's `CLA.md`: opening a pull request is the
+agreement, and no template asks you to tick anything.
+The CLA lets PassionCode.ai offer your contribution under both licenses. What each license means for users and contributors:
 [knowledge/licensing.md](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/licensing.md).
 
 ## 7. Recommended tools
