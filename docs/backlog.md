@@ -6,4 +6,4 @@ derives its common backlog from [backlog-sources.json](backlog-sources.json).
 
 | ID | Item | Status | Source |
 |---|---|---|---|
-| ORGPROFILE-01 | Verify the inherited CLA checkbox on a repository without its own pull request template | open | [Profile handoff](HANDOFF.md) |
+| ORGPROFILE-01 | Verify the inherited CLA checkbox on a repository without its own pull request template | dropped 2026-10-02: the operator removed the CLA checkbox from every template; opening a pull request is the agreement | [Profile handoff](HANDOFF.md) |
