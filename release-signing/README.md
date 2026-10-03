@@ -43,7 +43,7 @@ jobs:
     runs-on: macos-latest
     environment: release
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { fetch-depth: 0 }
       - id: sign
         uses: passioncode-ai/.github/actions/apple-signing@v1
@@ -58,7 +58,7 @@ jobs:
           asc-key-id: ${{ secrets.ASC_KEY_ID }}
           asc-issuer-id: ${{ secrets.ASC_ISSUER_ID }}
           asc-key-p8-b64: ${{ secrets.ASC_API_KEY_P8_B64 }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with: { name: release-macos, path: <the files to release> }
       - if: always()
         uses: passioncode-ai/.github/actions/apple-signing/cleanup@v1
