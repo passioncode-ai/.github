@@ -80,3 +80,41 @@ attestation all wait for the first approved run. *Green* here means merged and t
     self-test, which is why it runs on both OSes.
 - **Standing instruction (one):** for a value that must survive, store it, verify it, and only
   then remove the source copy, each as its own step.
+
+## Rehearsal results (2026-10-03, evening)
+
+The operator told the agent to approve rehearsals. Every approval carries the comment "approved
+on the operator's explicit instruction". Each result below was checked from the downloaded signed
+set:
+`gpg --verify SHA256SUMS.asc SHA256SUMS` (key `63B3…B6A7`), `shasum -a 256 -c SHA256SUMS`, and
+`gh attestation verify <file> --owner passioncode-ai --signer-repo passioncode-ai/.github`. On
+macOS, Gatekeeper also assessed a copy that carried a browser's quarantine flag.
+
+| Product | Rehearsal | Result |
+|---|---|---|
+| Fabric VR | `v0.1.0-rc.1`, run 37132362073 | **Green.** APK signed with the published key; GPG, sums and attestation OK |
+| Project Observatory | `v0.13.1-rc.1`, run 37127335035 | **Green.** Wheel and app; app accepted as "Notarized Developer ID", signed by CI certificate `FAWGBTTFGC` (serial `4F2105B4…`); attestations 2 of 2 |
+| Fabric Dashboards | `v0.4.1-rc.1`, run 37128282549 | **Green.** DMG notarized and stapled; attestations 4 of 4; CI certificate |
+| Fabric Inbox | `v0.9.0-rc.3`, run 37149725167 | **Green.** DMG notarized and attested. The MAS `.pkg` is signed by "3rd Party Mac Developer Installer (KJ35UYYL22)"; a rehearsal does not upload it |
+| Fabric Switchboard | `v0.5.3-rc.3`, run 37148716778 | **macOS green, Windows native tests green.** Windows packaging refused a dirty tree; Switchboard is fixing it (it now names the changed paths). Next: `rc.4` |
+| Fabric | — | Waits for 0.3.0 on main (preflight refused 0.2.0 correctly) |
+
+Defects the first approved runs found, all fixed:
+- `.github` 1.1.2: invalid YAML in `apple-signing/cleanup/action.yml`, which every macOS
+  signing job hit. A test now parses every action manifest.
+- `.github` 1.1.3: the attestation verify command printed in the release notes failed.
+- fabric-inbox #19: the profile check read `AppIdentifierPrefix`; Apple writes
+  `ApplicationIdentifierPrefix`.
+- fabric-inbox #21: empty entitlements on library code reached plistlib.
+- fabric-inbox #22: the entitlements refusal now names the file and the keys.
+- fabric-inbox #23: the app's own executable carries the app's entitlements.
+- fabric-switchboard #27: the storage owner check on an elevated Windows token.
+- fabric-switchboard #28: seven Windows-unaware tests or fixtures, and a 2 s → 5 s loopback bound.
+
+Azure (Windows signing): subscription "Azure subscription 1", tenant `c7dee310…`, account
+`passioncodesigning` (North Europe, Basic, `https://neu.codesigning.azure.net/`). An OIDC
+federated credential is limited to `repo:passioncode-ai/fabric-switchboard:environment:release`,
+with the role "Artifact Signing Certificate Profile Signer" on the account only. The six
+`AZURE_*` variables are set in Switchboard's `release` environment. The organization's identity
+validation (SV Lab / Siarhei Sheleh, DUNS) is **in progress** at Microsoft. After it, create the
+certificate profile `passioncode-public-trust` and set `AZURE_SIGNING_ENABLED=true`.
