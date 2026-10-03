@@ -96,7 +96,7 @@ macOS, Gatekeeper also assessed a copy that carried a browser's quarantine flag.
 | Project Observatory | `v0.13.1-rc.1`, run 37127335035 | **Green.** Wheel and app; app accepted as "Notarized Developer ID", signed by CI certificate `FAWGBTTFGC` (serial `4F2105B4…`); attestations 2 of 2 |
 | Fabric Dashboards | `v0.4.1-rc.1`, run 37128282549 | **Green.** DMG notarized and stapled; attestations 4 of 4; CI certificate |
 | Fabric Inbox | `v0.9.0-rc.3`, run 37149725167 | **Green.** DMG notarized and attested. The MAS `.pkg` is signed by "3rd Party Mac Developer Installer (KJ35UYYL22)"; a rehearsal does not upload it |
-| Fabric Switchboard | `v0.5.3-rc.3`, run 37148716778 | **macOS green, Windows native tests green.** Windows packaging refused a dirty tree; Switchboard is fixing it (it now names the changed paths). Next: `rc.4` |
+| Fabric Switchboard | `v0.5.3-rc.4`, run 37152992597 | **Green.** macOS app notarized (Gatekeeper accepts it); attestations 4 of 4; the Windows receipt says `windows_authenticode: NOT_SIGNED` until Azure identity validation completes. The Windows fixes needed: switchboard #27 (owner check), #28 (runtime tests), #29 (`.gitattributes eol=lf`; Tauri rewrote a CRLF checkout) |
 | Fabric | — | Waits for 0.3.0 on main (preflight refused 0.2.0 correctly) |
 
 Defects the first approved runs found, all fixed:
@@ -118,3 +118,14 @@ with the role "Artifact Signing Certificate Profile Signer" on the account only.
 `AZURE_*` variables are set in Switchboard's `release` environment. The organization's identity
 validation (SV Lab / Siarhei Sheleh, DUNS) is **in progress** at Microsoft. After it, create the
 certificate profile `passioncode-public-trust` and set `AZURE_SIGNING_ENABLED=true`.
+
+## First real release through CI
+
+Project Observatory **v0.14.0**, run 37149027804, approved by the agent on the operator's
+instruction. Published with the wheel, `ProjectObservatory-0.14.0-macos.zip`, `SHA256SUMS` and
+`SHA256SUMS.asc`. The downloaded assets pass GPG, sums and attestations (2 of 2), and the
+quarantined app is accepted as "Notarized Developer ID". Installed on the maintainer's machine
+from the release; the engine is 0.14.0.
+
+Gap found: `project-observatory full update` reads GitHub anonymously and hit the rate limit on a
+busy machine. It should accept a token.
