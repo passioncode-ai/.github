@@ -1,0 +1,55 @@
+name: Apple signing identities
+description: >
+  Import the release environment's Developer ID (and, for the Mac App Store, distribution and
+  installer) identities into a throwaway keychain that codesign uses without a prompt. Run
+  passioncode-ai/.github/actions/apple-signing/cleanup in an `if: always()` step at the end.
+inputs:
+  developer-id-p12-b64:
+    description: secrets.APPLE_DEVELOPER_ID_P12_B64
+    required: true
+  p12-password:
+    description: secrets.APPLE_DEVELOPER_ID_P12_PASSWORD
+    required: true
+  team-id:
+    description: vars.APPLE_TEAM_ID
+    required: true
+  distribution-p12-b64:
+    description: secrets.APPLE_DISTRIBUTION_P12_B64 (Mac App Store only)
+    required: false
+    default: ""
+  installer-p12-b64:
+    description: secrets.APPLE_INSTALLER_P12_B64 (Mac App Store only)
+    required: false
+    default: ""
+  mas-p12-password:
+    description: secrets.APPLE_MAS_P12_PASSWORD (Mac App Store only)
+    required: false
+    default: ""
+outputs:
+  identity:
+    description: Full name of the Developer ID Application identity
+    value: ${{ steps.setup.outputs.identity }}
+  keychain:
+    description: Path of the throwaway keychain
+    value: ${{ steps.setup.outputs.keychain }}
+  mas-app-identity:
+    description: The Mac App Store application identity, when given
+    value: ${{ steps.setup.outputs.mas_app_identity }}
+  mas-installer-identity:
+    description: The Mac App Store installer identity, when given
+    value: ${{ steps.setup.outputs.mas_installer_identity }}
+runs:
+  using: composite
+  steps:
+    - id: setup
+      shell: bash
+      env:
+        DEVELOPER_ID_P12_B64: ${{ inputs.developer-id-p12-b64 }}
+        P12_PASSWORD: ${{ inputs.p12-password }}
+        TEAM_ID: ${{ inputs.team-id }}
+        DISTRIBUTION_P12_B64: ${{ inputs.distribution-p12-b64 }}
+        INSTALLER_P12_B64: ${{ inputs.installer-p12-b64 }}
+        MAS_P12_PASSWORD: ${{ inputs.mas-p12-password }}
+        KEYCHAIN: ${{ runner.temp }}/release-signing.keychain-db
+        SEARCH_LIST: "1"
+      run: bash "${{ github.action_path }}/setup.sh" >> "$GITHUB_OUTPUT"

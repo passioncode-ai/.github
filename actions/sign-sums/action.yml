@@ -1,0 +1,27 @@
+name: SHA256SUMS with a GPG signature
+description: >
+  Write SHA256SUMS over a folder of release files and a detached SHA256SUMS.asc made with the
+  organization's release key (public key: passioncode-ai/.github release-signing/).
+inputs:
+  folder:
+    description: Folder whose files are summed (not recursive)
+    required: true
+  gpg-key-b64:
+    description: secrets.RELEASE_GPG_PRIVATE_KEY_B64
+    required: true
+  gpg-passphrase:
+    description: secrets.RELEASE_GPG_PASSPHRASE
+    required: true
+outputs:
+  fingerprint:
+    description: The signing key's fingerprint
+    value: ${{ steps.sign.outputs.fingerprint }}
+runs:
+  using: composite
+  steps:
+    - id: sign
+      shell: bash
+      env:
+        RELEASE_GPG_PRIVATE_KEY_B64: ${{ inputs.gpg-key-b64 }}
+        RELEASE_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+      run: bash "${{ github.action_path }}/sign-sums.sh" "${{ inputs.folder }}" >> "$GITHUB_OUTPUT"

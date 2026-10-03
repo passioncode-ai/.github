@@ -1,0 +1,31 @@
+name: Notarize, staple and assess
+description: >
+  Notarize a signed .app, .dmg or .pkg with the team's App Store Connect API key, staple the
+  ticket and assess it with spctl. Fails (and prints Apple's log) unless Apple accepts.
+inputs:
+  path:
+    description: The signed .app, .dmg or .pkg
+    required: true
+  asc-key-id:
+    description: secrets.ASC_KEY_ID
+    required: true
+  asc-issuer-id:
+    description: secrets.ASC_ISSUER_ID
+    required: true
+  asc-key-p8-b64:
+    description: secrets.ASC_API_KEY_P8_B64
+    required: true
+outputs:
+  submission:
+    description: Apple's notarization submission id
+    value: ${{ steps.notarize.outputs.submission }}
+runs:
+  using: composite
+  steps:
+    - id: notarize
+      shell: bash
+      env:
+        ASC_KEY_ID: ${{ inputs.asc-key-id }}
+        ASC_ISSUER_ID: ${{ inputs.asc-issuer-id }}
+        ASC_API_KEY_P8_B64: ${{ inputs.asc-key-p8-b64 }}
+      run: bash "${{ github.action_path }}/notarize.sh" "${{ inputs.path }}" >> "$GITHUB_OUTPUT"

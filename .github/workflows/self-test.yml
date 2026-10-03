@@ -1,0 +1,34 @@
+# The release-signing tooling's own checks: the scripts' tests (fake gh, fake Apple tools, a
+# real gpg), actionlint over every workflow and action, shellcheck over every script. Nightly
+# with the organization's batch (org-index docs/CI-BATCHING.md) and by hand; never per push.
+name: self-test
+
+on:
+  schedule:
+    - cron: "0 21 * * *"   # 23:00 Europe/Warsaw (summer time)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Script tests
+        run: python -m unittest discover -s tests -v
+      - name: shellcheck
+        if: runner.os == 'Linux'
+        run: shellcheck actions/*/*.sh scripts/*.sh
+      - name: actionlint
+        if: runner.os == 'Linux'
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
