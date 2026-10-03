@@ -102,7 +102,7 @@ jobs:
 
 | Key | Vault slot (Observatory) | Notes |
 |---|---|---|
-| CI Developer ID Application (G2), team KJ35UYYL22, certificate id `8BQWYPFLS2`, expires 2031-09-17 | `apple-publisher-kj35uyyl22/prod`: `APPLE_DEVELOPER_ID_P12_B64`, `APPLE_DEVELOPER_ID_P12_PASSWORD` | Used only by CI. The operator's local Developer ID is a different certificate: revoking one leaves the other |
+| CI Developer ID Application (G2), team KJ35UYYL22, certificate id `FAWGBTTFGC`, expires 2031-09-17 (rotated 2026-10-03 from `8BQWYPFLS2`, whose key was destroyed unused) | `apple-publisher-kj35uyyl22/prod`: `APPLE_DEVELOPER_ID_P12_B64`, `APPLE_DEVELOPER_ID_P12_PASSWORD` | Used only by CI. The operator's local Developer ID is a different certificate: revoking one leaves the other |
 | App Store Connect API key | `apple-publisher-kj35uyyl22/prod`: `ASC_*` | Notarization; reads certificates and profiles; uploads to App Store Connect. It cannot issue Developer ID certificates |
 | CI Mac App Distribution (`4K8Y54M3FC`) and Mac Installer Distribution (`KM2FU4HAB2`), team KJ35UYYL22; their names in a keychain are "3rd Party Mac Developer Application/Installer: …" | `apple-publisher-kj35uyyl22/prod`: `APPLE_DISTRIBUTION_P12_B64`, `APPLE_INSTALLER_P12_B64`, `APPLE_MAS_P12_PASSWORD` (one password for both) | Issued through the API (`scripts/new-apple-cert.sh`) |
 | Fabric Inbox Mac App Store profile `A82J7K8VTT` (bundle id `ai.passioncode.fabric-inbox`, resource `CMB7CQ54FX`), expires 2027-10-03 | `fabric-inbox/prod`: `MAS_PROVISION_PROFILE_B64` | Authorizes only the CI Mac App Distribution certificate; renew it yearly with `scripts/asc.py create-profile` |
@@ -116,8 +116,17 @@ jobs:
   2. Upload the CSR at developer.apple.com → Certificates → + → Developer ID Application (G2
      Sub-CA).
   3. Run `scripts/new-apple-cert.sh --cert-id <id> DEVELOPER_ID_APPLICATION <same dir>`.
-  4. `vault.py rotate` both names.
-  5. Sync the secrets, then revoke the old certificate in the portal.
+  4. `vault.py rotate` both names. The vault must then serve the new `.p12`: compare sha256
+     prefixes, never values.
+  5. Sync the secrets into every Apple product.
+  6. The portal cannot revoke a Developer ID certificate. Only Apple can, on a request to
+     Developer Support, because revoking one can stop already-shipped apps from opening.
+     - **An unused certificate** needs no revocation: destroy its key with
+       `vault.py remove … --retired` once the new one is synced. The GitHub secrets are already
+       overwritten, so the key then exists nowhere.
+     - **A certificate whose key leaked** goes to Apple. The operator sends that request.
+
+  Done once as a drill on 2026-10-03: `8BQWYPFLS2` → `FAWGBTTFGC`.
 - **MAS certificates.** `scripts/new-apple-cert.sh MAC_APP_DISTRIBUTION|MAC_INSTALLER_DISTRIBUTION <dir>`
   works through the API with no portal step.
 - **GPG.**

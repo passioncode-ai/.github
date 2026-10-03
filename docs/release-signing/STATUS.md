@@ -27,12 +27,12 @@ synced, and the counts match the manifest: 7 per Apple product, 11 for Inbox, 6 
 | R1 shared actions and workflow `@v1` | **done** (v1 → 1.1.0) | `self-test.yml` green on ubuntu and macos (runs 37126174373, 37127228934, 37128831069); 33 tests across fake `gh`, fake Apple tools and real `gpg`; planted defects watched failing |
 | R2 a `release` environment per product | **done** | `setup-release-env.py --apply` is idempotent, and its second run reports every item `unchanged` |
 | R3 team `release-approvers` | **done** | `gh api orgs/passioncode-ai/teams/release-approvers/members` → khurss, sshlg, svlab93 |
-| R4 a CI-only Developer ID | **done**; **the signed artifact is pending approval** | Certificate `8BQWYPFLS2` (G2, valid to 2031-09-17), a key different from the local one. Proven locally through `actions/apple-signing`: `codesign` with no prompt, and the user's search list unchanged |
+| R4 a CI-only Developer ID | **done**; **the signed artifact is pending approval** | Certificate `FAWGBTTFGC` (rotated from `8BQWYPFLS2`) (G2, valid to 2031-09-17), a key different from the local one. Proven locally through `actions/apple-signing`: `codesign` with no prompt, and the user's search list unchanged |
 | R5 one notary convention (`ASC_*`) | **done** | Every CI path reads `ASC_*`; no Keychain notary profile is used in CI. The local profile paths remain, marked debug only |
 | R6 sync tool | **done** | `tests/test_release_env_scripts.py`; real syncs printed names and sha256 prefixes only |
 | R7 no hardcoded team id | **done** | `git grep KJ35UYYL22 origin/main` outside docs is empty in all six products; Dashboards' hit is its own guard test |
 | R8 the five macOS products release through CI | **merged; a notarized CI artifact is pending approval** | The runs above |
-| R9 Inbox in the Mac App Store | **certificates, profile, job done; the upload needs the app record** | Certificates `4K8Y54M3FC` and `KM2FU4HAB2`, profile `A82J7K8VTT`, bundle id resource `CMB7CQ54FX` |
+| R9 Inbox in the Mac App Store | **certificates, profile, job and app record (`6818818207`) done; the first upload is pending approval** | Certificates `4K8Y54M3FC` and `KM2FU4HAB2`, profile `A82J7K8VTT`, bundle id resource `CMB7CQ54FX` |
 | R10 Windows Authenticode | **wired behind `AZURE_SIGNING_ENABLED=false`** | Until Azure exists, the receipt and notes say `windows_authenticode: NOT_SIGNED`; Switchboard `docs/DISTRIBUTION.md` holds the human steps |
 | R11 Fabric VR keystore | **done; the signed APK is pending approval** | PKCS12 RSA 4096, valid to 2056-09-25, SHA-256 `06:69:C0:CF:…:94:C6:D5:41`; `verify-release-apk.sh` checks it on every release |
 | R12 Sigstore and GPG | **done; the first real run is pending approval** | Key `63B3 0DC3 24BD 6974 87AA 3194 4FAF B8AE C803 B6A7`, public part in `release-signing/` |
@@ -52,10 +52,13 @@ attestation all wait for the first approved run. *Green* here means merged and t
    certificate profile and a federated credential for Switchboard's `release` environment. Then
    set the `AZURE_*` variables and `AZURE_SIGNING_ENABLED=true` (Switchboard
    `docs/DISTRIBUTION.md`). Add those variables to `products.json` here.
-3. **The App Store Connect app record** for `ai.passioncode.fabric-inbox`. The API cannot create
-   one; it is a person's act in App Store Connect (name, SKU, primary language).
+3. ~~The App Store Connect app record~~ — **done 2026-10-03** through the operator's App Store
+   Connect session: "Fabric Inbox", Apple id `6818818207`, SKU `fabric-inbox`, primary language
+   en-US, macOS.
 4. **Developer ID rotation** before 2031-09-17 needs the Account Holder in the portal
-   (README → Rotating).
+   (README → Rotating). It was rehearsed on 2026-10-03: CI certificate `8BQWYPFLS2` →
+   `FAWGBTTFGC`, synced into the five Apple products, and the old key destroyed. The old
+   certificate signed nothing.
 
 ## Retrospective
 
