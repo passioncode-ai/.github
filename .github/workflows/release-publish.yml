@@ -52,13 +52,13 @@ jobs:
     outputs:
       url: ${{ steps.release.outputs.url }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: ${{ inputs.changelog }}
           sparse-checkout-cone-mode: false
 
       - name: Collect the signed artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: ${{ inputs.artifact-pattern }}
           path: dist
@@ -72,7 +72,7 @@ jobs:
           ls -l dist
 
       - name: Attest build provenance (Sigstore)
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: dist/*
 
@@ -110,7 +110,7 @@ jobs:
 
       - name: Rehearsal — keep the signed set as a workflow artifact, touch no release
         if: ${{ !inputs.publish }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: signed-release-${{ inputs.tag || github.ref_name }}
           path: |

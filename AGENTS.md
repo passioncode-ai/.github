@@ -19,8 +19,9 @@ assets ([assets/](assets/)), and the defaults GitHub applies to every repository
 Since 2026-10-03 it also holds the organization's **release signing**: composite actions
 (`actions/`), the reusable `release-publish` workflow, the setup and sync scripts (`scripts/`),
 the product manifest and the release GPG public key (`release-signing/`). Products pin it at the
-tag `v1`; a change here reaches every product only when `v1` moves, which is a release of this
-repository (move the tag to a reviewed `main` commit; never to a branch). How it works and how a
+tag `v1`. `v1` is a floating major tag: a release of this repository adds an immutable `v1.x.y`
+on a reviewed `main` commit and moves `v1` to it (never to a branch); a breaking change is `v2`.
+Third-party actions are pinned by commit SHA, because these workflows hold the signing keys. How it works and how a
 product adopts it: [release-signing/README.md](release-signing/README.md).
 
 ## Commands
