@@ -13,6 +13,9 @@ Commands:
   get-cert ID OUT_CER                write an existing certificate's DER .cer
   profiles                           list provisioning profiles: id, name, type, state
   bundle-ids                         list bundle ids: id, identifier, platform
+  apps                               list App Store Connect apps: id, bundle id, name, sku
+  register-bundle IDENT NAME PLATFORM register a bundle id (PLATFORM: MAC_OS, IOS, UNIVERSAL)
+  create-profile NAME TYPE BUNDLE_RES OUT CERT_ID…  issue a provisioning profile, write it to OUT
 
 Nothing here prints a key, a token or a certificate body; it prints ids, names and dates.
 Requires the `cryptography` package (ES256 signing of the request token).
@@ -97,6 +100,24 @@ def main(argv: list[str]) -> int:
         for p in paged("/v1/profiles?limit=200"):
             a = p["attributes"]
             print(p["id"], repr(a.get("name")), a.get("profileType"), a.get("profileState"), a.get("expirationDate"), sep="\t")
+    elif cmd == "register-bundle" and len(argv) == 4:
+        doc = call("POST", "/v1/bundleIds", {"data": {"type": "bundleIds", "attributes": {
+            "identifier": argv[1], "name": argv[2], "platform": argv[3]}}})
+        print(doc["data"]["id"], doc["data"]["attributes"].get("identifier"), sep="\t")
+    elif cmd == "create-profile" and len(argv) >= 6:
+        # create-profile NAME TYPE BUNDLE_RESOURCE_ID OUT_FILE CERT_ID [CERT_ID…]
+        name, ptype, bundle, out, certs = argv[1], argv[2], argv[3], argv[4], argv[5:]
+        doc = call("POST", "/v1/profiles", {"data": {"type": "profiles", "attributes": {"name": name, "profileType": ptype},
+            "relationships": {"bundleId": {"data": {"type": "bundleIds", "id": bundle}},
+                              "certificates": {"data": [{"type": "certificates", "id": c} for c in certs]}}}})
+        a = doc["data"]["attributes"]
+        with open(out, "wb") as f:
+            f.write(base64.b64decode(a["profileContent"]))
+        print(doc["data"]["id"], repr(a.get("name")), a.get("profileType"), a.get("profileState"), a.get("expirationDate"), sep="\t")
+    elif cmd == "apps":
+        for a_ in paged("/v1/apps?limit=200"):
+            a = a_["attributes"]
+            print(a_["id"], a.get("bundleId"), repr(a.get("name")), a.get("sku"), sep="\t")
     elif cmd == "bundle-ids":
         for b in paged("/v1/bundleIds?limit=200"):
             a = b["attributes"]
