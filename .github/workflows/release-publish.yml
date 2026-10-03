@@ -30,6 +30,13 @@ on:
         description: Path of the CHANGELOG whose `## <version>` section becomes the notes
         type: string
         default: CHANGELOG.md
+      prerelease:
+        description: >
+          "auto" (default) marks the release a prerelease when the tag carries -alpha, -beta or
+          -preview (e.g. v0.5.4-beta.1); "true" or "false" decides it outright. An -rc tag is a
+          rehearsal (publish: false), never a release.
+        type: string
+        default: auto
       publish:
         description: false = a rehearsal — sign and attest, keep the set as a workflow artifact, touch no release
         type: boolean
@@ -124,9 +131,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
+          PRERELEASE_INPUT: ${{ inputs.prerelease }}
         run: |
           # A published release is never rewritten: its files are what installed copies were
           # verified against (SHA256SUMS, update checks). Only a new release or a draft is written.
+          case "${PRERELEASE_INPUT}" in
+            true) pre=true ;; false) pre=false ;;
+            auto) if [[ "$TAG" =~ -(alpha|beta|preview)(\.|$) ]]; then pre=true; else pre=false; fi ;;
+            *) echo "::error::prerelease must be auto, true or false"; exit 1 ;;
+          esac
+          if [[ "$TAG" =~ -rc(\.|$) ]]; then echo "::error::$TAG is a rehearsal tag; publish it with publish: false"; exit 1; fi
           state=$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isDraft -q .isDraft 2>/dev/null || echo absent)
           case "$state" in
             absent) gh release create "$TAG" dist/* --draft --verify-tag --title "$TAG" --notes-file notes.md -R "$GITHUB_REPOSITORY" ;;
@@ -134,5 +148,5 @@ jobs:
                     gh release edit "$TAG" --notes-file notes.md -R "$GITHUB_REPOSITORY" ;;
             *)      echo "::error::release $TAG is already published; a published release is not rewritten — cut a new tag"; exit 1 ;;
           esac
-          gh release edit "$TAG" --draft=false -R "$GITHUB_REPOSITORY"
+          gh release edit "$TAG" --draft=false --prerelease="$pre" -R "$GITHUB_REPOSITORY"
           echo "url=$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json url -q .url)" >> "$GITHUB_OUTPUT"
