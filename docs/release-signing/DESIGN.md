@@ -33,7 +33,8 @@ product repository (e.g. fabric-dashboards)
 ## The `release` environment (per product repository)
 
 - `reviewers`: team `release-approvers` (sshlg, khurss, svlab93).
-- `prevent_self_review: true`: whoever pushed the tag cannot approve.
+- `prevent_self_review`: from `products.json`; `false` since the operator's amendment of D5
+  (any member may approve, the author included).
 - `can_admins_bypass: false`: an organization admin cannot skip the review either; otherwise the
   rule would not hold for the admin.
 - `deployment_branch_policy: {protected_branches: false, custom_branch_policies: true}`, plus one
@@ -42,9 +43,8 @@ product repository (e.g. fabric-dashboards)
 - Secrets, set by `scripts/sync-release-secrets.py` from the vault over stdin.
 - Variables (not secrets): `APPLE_TEAM_ID`, and `AZURE_*` for Switchboard.
 
-**Consequence of D5 to state plainly.** An agent acting with the operator's GitHub account is
-the operator. A release it starts must therefore be approved by khurss or svlab93. That includes
-the pilot.
+**Approval stays a person's act.** An agent acting with the operator's GitHub account could
+approve its own run; it never does. It starts the run and names where to approve.
 
 ## Composite actions in `.github` (`@v1`)
 

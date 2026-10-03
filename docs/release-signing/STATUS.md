@@ -16,7 +16,8 @@ design: [DESIGN.md](DESIGN.md); plan: [PLAN.md](PLAN.md); usage:
 | Fabric VR (Quest APK) | PR #10 → `0367521` (DEC-0104) | [`v0.1.0-rc.1`](https://github.com/passioncode-ai/fabric-vr/actions/runs/37132362073): the sign-and-verify job is waiting | an approver |
 
 Every `release` environment was checked with `gh api repos/<r>/environments/release`: reviewers
-are the team `release-approvers` (sshlg, khurss, svlab93), `prevent_self_review: true`,
+are the team `release-approvers` (sshlg, khurss, svlab93); `prevent_self_review: false` since the
+operator's amendment (any member, the author included, may approve);
 `can_admins_bypass: false`, and the only deployment policy is the tag `v*`. The secrets are
 synced, and the counts match the manifest: 7 per Apple product, 11 for Inbox, 6 for VR.
 
@@ -45,7 +46,7 @@ attestation all wait for the first approved run. *Green* here means merged and t
 
 ## Human steps, in one place
 
-1. **khurss or svlab93: approve the rehearsals above.** Open each run, choose "Review
+1. **A member of release-approvers (the operator included) approves the rehearsals above.** Open each run, choose "Review
    deployments" and approve; `publish` asks a second time. A rehearsal creates no release. It
    proves the signed path and keeps the signed set as a workflow artifact for 14 days.
 2. **Azure Artifact Signing** for Windows: an EU company, a subscription, identity validation, a

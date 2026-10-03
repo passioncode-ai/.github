@@ -3,18 +3,86 @@
   "environment": "release",
   "team": "release-approvers",
   "tag_pattern": "v*",
+  "prevent_self_review": false,
   "groups": {
-    "apple": ["APPLE_DEVELOPER_ID_P12_B64", "APPLE_DEVELOPER_ID_P12_PASSWORD", "ASC_API_KEY_P8_B64", "ASC_KEY_ID", "ASC_ISSUER_ID"],
-    "mas": ["APPLE_DISTRIBUTION_P12_B64", "APPLE_INSTALLER_P12_B64", "APPLE_MAS_P12_PASSWORD", "MAS_PROVISION_PROFILE_B64"],
-    "gpg": ["RELEASE_GPG_PRIVATE_KEY_B64", "RELEASE_GPG_PASSPHRASE"],
-    "android": ["ANDROID_KEYSTORE_B64", "ANDROID_KEYSTORE_PASSWORD", "ANDROID_KEY_ALIAS", "ANDROID_KEY_PASSWORD"]
+    "apple": [
+      "APPLE_DEVELOPER_ID_P12_B64",
+      "APPLE_DEVELOPER_ID_P12_PASSWORD",
+      "ASC_API_KEY_P8_B64",
+      "ASC_KEY_ID",
+      "ASC_ISSUER_ID"
+    ],
+    "mas": [
+      "APPLE_DISTRIBUTION_P12_B64",
+      "APPLE_INSTALLER_P12_B64",
+      "APPLE_MAS_P12_PASSWORD",
+      "MAS_PROVISION_PROFILE_B64"
+    ],
+    "gpg": [
+      "RELEASE_GPG_PRIVATE_KEY_B64",
+      "RELEASE_GPG_PASSPHRASE"
+    ],
+    "android": [
+      "ANDROID_KEYSTORE_B64",
+      "ANDROID_KEYSTORE_PASSWORD",
+      "ANDROID_KEY_ALIAS",
+      "ANDROID_KEY_PASSWORD"
+    ]
   },
   "repos": {
-    "passioncode-ai/project-observatory-dashboard": {"groups": ["apple", "gpg"], "vars": {"APPLE_TEAM_ID": "KJ35UYYL22"}},
-    "passioncode-ai/fabric-dashboards": {"groups": ["apple", "gpg"], "vars": {"APPLE_TEAM_ID": "KJ35UYYL22"}},
-    "passioncode-ai/fabric-inbox": {"groups": ["apple", "mas", "gpg"], "vars": {"APPLE_TEAM_ID": "KJ35UYYL22"}},
-    "passioncode-ai/fabric": {"groups": ["apple", "gpg"], "vars": {"APPLE_TEAM_ID": "KJ35UYYL22"}},
-    "passioncode-ai/fabric-switchboard": {"groups": ["apple", "gpg"], "vars": {"APPLE_TEAM_ID": "KJ35UYYL22", "AZURE_SIGNING_ENABLED": "false"}},
-    "passioncode-ai/fabric-vr": {"groups": ["android", "gpg"], "vars": {}}
+    "passioncode-ai/project-observatory-dashboard": {
+      "groups": [
+        "apple",
+        "gpg"
+      ],
+      "vars": {
+        "APPLE_TEAM_ID": "KJ35UYYL22"
+      }
+    },
+    "passioncode-ai/fabric-dashboards": {
+      "groups": [
+        "apple",
+        "gpg"
+      ],
+      "vars": {
+        "APPLE_TEAM_ID": "KJ35UYYL22"
+      }
+    },
+    "passioncode-ai/fabric-inbox": {
+      "groups": [
+        "apple",
+        "mas",
+        "gpg"
+      ],
+      "vars": {
+        "APPLE_TEAM_ID": "KJ35UYYL22"
+      }
+    },
+    "passioncode-ai/fabric": {
+      "groups": [
+        "apple",
+        "gpg"
+      ],
+      "vars": {
+        "APPLE_TEAM_ID": "KJ35UYYL22"
+      }
+    },
+    "passioncode-ai/fabric-switchboard": {
+      "groups": [
+        "apple",
+        "gpg"
+      ],
+      "vars": {
+        "APPLE_TEAM_ID": "KJ35UYYL22",
+        "AZURE_SIGNING_ENABLED": "false"
+      }
+    },
+    "passioncode-ai/fabric-vr": {
+      "groups": [
+        "android",
+        "gpg"
+      ],
+      "vars": {}
+    }
   }
 }
