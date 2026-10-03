@@ -1,5 +1,5 @@
 name: Apple signing identities — cleanup
-description: Remove the keychain apple-signing made. Use in an `if: always()` step.
+description: "Remove the keychain apple-signing made. Use in an `if: always()` step."
 runs:
   using: composite
   steps:
