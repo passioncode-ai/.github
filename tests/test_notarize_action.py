@@ -28,7 +28,7 @@ FAKES = {
         echo "xcrun $*" >> "$FAKE_DIR/calls"
         if [[ "$1 $2" == "notarytool submit" ]]; then
           # Record whether the key file exists while notarytool runs, and its mode.
-          prev=""; for a in "$@"; do [[ "$prev" == --key ]] && stat -f %Lp "$a" > "$FAKE_DIR/keymode" 2>/dev/null; [[ "$prev" == --key ]] && echo "$a" > "$FAKE_DIR/keypath"; prev=$a; done
+          prev=""; for a in "$@"; do [[ "$prev" == --key ]] && python3 -c 'import os,sys; print(format(os.stat(sys.argv[1]).st_mode & 0o777, "o"))' "$a" > "$FAKE_DIR/keymode"; [[ "$prev" == --key ]] && echo "$a" > "$FAKE_DIR/keypath"; prev=$a; done
           cat "$FAKE_DIR/submit.json"
         elif [[ "$1 $2" == "notarytool log" ]]; then echo '{"issues":[{"message":"The signature of the binary is invalid."}]}'
         elif [[ "$1" == stapler ]]; then echo "The $2 action worked!"; fi"""),
