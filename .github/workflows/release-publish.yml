@@ -109,7 +109,9 @@ jobs:
             echo '```sh'
             echo "gpg --verify SHA256SUMS.asc SHA256SUMS      # key ${{ steps.sums.outputs.fingerprint }}"
             echo "shasum -a 256 -c SHA256SUMS --ignore-missing"
-            echo "gh attestation verify <file> -R ${GITHUB_REPOSITORY}"
+            # The attestation is signed by this shared workflow, so the signer is passioncode-ai/.github;
+            # `-R <product>` alone fails ("verifying with issuer sigstore.dev"), measured 2026-10-03.
+            echo "gh attestation verify <file> --owner passioncode-ai --signer-repo passioncode-ai/.github"
             echo '```'
             echo
             echo "The organization's public key: https://github.com/passioncode-ai/.github/blob/main/release-signing/passioncode-release-signing.asc"

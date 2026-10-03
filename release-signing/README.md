@@ -27,6 +27,21 @@ trigger ignores `-rc` tags), then run
 `gh workflow run release.yml --ref vX.Y.Z-rc.N -f publish=false`. The signed set is kept as a
 workflow artifact for 14 days, and no release is created.
 
+## Verifying a release
+
+```sh
+gpg --import passioncode-release-signing.asc          # once; key 63B3 0DC3 24BD 6974 87AA 3194 4FAF B8AE C803 B6A7
+gpg --verify SHA256SUMS.asc SHA256SUMS
+shasum -a 256 -c SHA256SUMS --ignore-missing
+gh attestation verify <file> --owner passioncode-ai --signer-repo passioncode-ai/.github
+```
+
+The attestation is signed by the shared `release-publish` workflow, so its signer is
+`passioncode-ai/.github`. Its provenance names the product's own `release.yml`, tag and commit.
+`gh attestation verify <file> -R <product>` alone fails with "verifying with issuer
+sigstore.dev". All four steps were run against Fabric VR's first rehearsal
+(`v0.1.0-rc.1`) on 2026-10-03.
+
 ## The shared pieces (`@v1`)
 
 | Piece | Use |
