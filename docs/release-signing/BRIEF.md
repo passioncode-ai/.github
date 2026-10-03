@@ -16,7 +16,7 @@ correctly. Write the rule where every agent reads it.
 | D2 | Apple account | The operator's Developer ID team `KJ35UYYL22` |
 | D3 | Home of the shared mechanism | `passioncode-ai/.github`: reusable workflows and scripts, versioned by tag (`@v1`) |
 | D4 | CI certificate | A new Developer ID Application certificate for CI only. Its key is generated outside any Keychain. The operator's local certificate stays untouched and is revoked separately |
-| D5 | Who approves | GitHub team `release-approvers`: sshlg, khurss, svlab93. The author of a release cannot approve it (`prevent_self_review`) |
+| D5 | Who approves | GitHub team `release-approvers`: sshlg, khurss, svlab93. *Amended the same day:* any member may approve, the release's author included (`prevent_self_review: false` in `products.json`); first decided as "not the author" |
 | D6 | Windows | Azure Artifact Signing, opened on an EU company the operator names, through OIDC (no stored secret) |
 | D7 | Linux, and every artifact | A Sigstore build-provenance attestation on every release artifact on every platform, plus a detached GPG signature on `SHA256SUMS` with an organization key |
 | D8 | Android/Quest | One release keystore per app, starting with Fabric VR. RSA 4096, valid 30 years. The original lives in the Observatory vault (encrypted off-disk backup); a copy goes to the `release` environment |

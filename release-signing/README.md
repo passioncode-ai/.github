@@ -1,8 +1,9 @@
 # Release signing — how every PassionCode.ai product is signed
 
 Released builds are signed **only in GitHub Actions**, in each product repository's protected
-`release` environment. They are released **only after someone from `release-approvers` approves**,
-and that person cannot be whoever pushed the tag. Nobody's laptop holds a release key.
+`release` environment. They are released **only after someone from `release-approvers` approves**:
+a person looks at the run and clicks. The release's author may approve it (operator decision,
+2026-10-03; `prevent_self_review` in [products.json](products.json) turns four eyes back on). Nobody's laptop holds a release key.
 Decisions and design: [docs/release-signing/](../docs/release-signing/BRIEF.md).
 
 ## What a release looks like
@@ -11,8 +12,8 @@ Decisions and design: [docs/release-signing/](../docs/release-signing/BRIEF.md).
    required checks.
 2. Push the tag: `git tag -a vX.Y.Z <merge commit> -m … && git push origin vX.Y.Z`.
 3. The product's `release.yml` starts. Its signing jobs wait for the `release` environment.
-4. Someone from `release-approvers` other than the tag's author opens the run and approves
-   ("Review deployments"). The jobs build, sign, notarize, staple and assess. The `publish`
+4. Someone from `release-approvers` opens the run and approves ("Review deployments" →
+   `release` → "Approve and deploy"). The jobs build, sign, notarize, staple and assess. The `publish`
    job waits for a second approval, because it holds the GPG key.
 5. `publish` attests every file (Sigstore), writes `SHA256SUMS` and `SHA256SUMS.asc`, and
    publishes the release. A published release is never rewritten: a fix is a new tag.
@@ -143,5 +144,6 @@ jobs:
   a branch) is a debug build. It is never published or attached to a release.
 - Never print, log or commit a key, a `.p12`, a password or a token. Values move over stdin
   (`vault.py put`, `gh secret set`) and nothing else.
-- Never approve a release you started; GitHub refuses it anyway (`prevent_self_review`).
+- An approval is a person's act: an agent never approves a release run, even when the account
+  it uses could. It starts the run and says where to approve.
 - Never rewrite a published release. A wrong release is fixed with a new tag.

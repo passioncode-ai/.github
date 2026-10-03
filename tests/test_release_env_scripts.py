@@ -63,7 +63,8 @@ class SetupReleaseEnv(unittest.TestCase):
         put = next(c for c in calls if f"repos/{REPO}/environments/release" in c["argv"] and "PUT" in c["argv"])
         body = json.loads(put["stdin"])
         self.assertEqual(body["reviewers"], [{"type": "Team", "id": 42}])
-        self.assertIs(body["prevent_self_review"], True)
+        manifest = json.loads(MANIFEST.read_text())
+        self.assertIs(body["prevent_self_review"], manifest["prevent_self_review"])
         self.assertIs(body["can_admins_bypass"], False)
         self.assertEqual(body["deployment_branch_policy"], {"protected_branches": False, "custom_branch_policies": True})
         policy = next(c for c in calls if any(a.endswith("/deployment-branch-policies") for a in c["argv"]))
@@ -75,11 +76,22 @@ class SetupReleaseEnv(unittest.TestCase):
         variable = next(c for c in calls if any("/variables" in a for a in c["argv"]))
         self.assertEqual(json.loads(variable["stdin"]), {"name": "APPLE_TEAM_ID", "value": "KJ35UYYL22"})
 
+    def test_the_manifest_can_restore_four_eyes(self):
+        manifest = json.loads(MANIFEST.read_text())
+        manifest["prevent_self_review"] = True
+        alt = self.tmp / "products.json"
+        alt.write_text(json.dumps(manifest))
+        env = fakegh.install(self.tmp, {"team_id": 42})
+        result = run(SETUP, ["--repo", REPO, "--apply", "--manifest", str(alt)], env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        put = next(c for c in mutating(fakegh.calls(self.tmp)) if "PUT" in c["argv"] and c["argv"][-3].endswith("/environments/release"))
+        self.assertIs(json.loads(put["stdin"])["prevent_self_review"], True)
+
     def test_apply_is_idempotent(self):
         env = fakegh.install(self.tmp, {
             "team_id": 42, "team_repos": [REPO],
             "env": {"name": "release", "can_admins_bypass": False,
-                    "protection_rules": [{"type": "required_reviewers", "prevent_self_review": True,
+                    "protection_rules": [{"type": "required_reviewers", "prevent_self_review": json.loads(MANIFEST.read_text())["prevent_self_review"],
                                           "reviewers": [{"type": "Team", "reviewer": {"id": 42}}]}],
                     "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}},
             "policies": [{"name": "v*", "type": "tag"}],

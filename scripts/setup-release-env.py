@@ -6,7 +6,8 @@
 
 For each repository in release-signing/products.json:
   * reviewers = the team named in the manifest (release-approvers);
-  * prevent_self_review = true: whoever pushed the tag cannot approve its signing;
+  * prevent_self_review from the manifest (false since 2026-10-03: any team member may approve,
+    the tag's author included; true restores four eyes);
   * can_admins_bypass = false: an organization admin cannot skip the review either;
   * deployments only from tags matching the manifest's pattern (`v*`);
   * the repository's environment variables (APPLE_TEAM_ID, AZURE_SIGNING_ENABLED, …).
@@ -39,19 +40,19 @@ def gh(*args: str, body: dict | None = None, check: bool = True) -> dict | None:
     return json.loads(proc.stdout or "{}")
 
 
-def desired_env(team_id: int) -> dict:
-    return {"wait_timer": 0, "prevent_self_review": True, "can_admins_bypass": False,
+def desired_env(team_id: int, self_review_blocked: bool) -> dict:
+    return {"wait_timer": 0, "prevent_self_review": self_review_blocked, "can_admins_bypass": False,
             "reviewers": [{"type": "Team", "id": team_id}],
             "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}}
 
 
-def env_matches(current: dict | None, team_id: int) -> bool:
+def env_matches(current: dict | None, team_id: int, self_review_blocked: bool) -> bool:
     if not current:
         return False
     rules = {r.get("type"): r for r in current.get("protection_rules", [])}
     reviewers = rules.get("required_reviewers", {})
     ids = [(r.get("type"), (r.get("reviewer") or {}).get("id")) for r in reviewers.get("reviewers", [])]
-    return (ids == [("Team", team_id)] and reviewers.get("prevent_self_review") is True
+    return (ids == [("Team", team_id)] and reviewers.get("prevent_self_review") is self_review_blocked
             and current.get("can_admins_bypass") is False
             and current.get("deployment_branch_policy") == {"protected_branches": False, "custom_branch_policies": True})
 
@@ -77,12 +78,17 @@ def setup(repo: str, conf: dict, manifest: dict, team_id: int, apply: bool) -> l
         act(f"give team {manifest['team']} read access to {name}",
             lambda: gh("-X", "PUT", team_repo, body={"permission": "pull"}))
 
+    # The operator's decision (D5, amended 2026-10-03): a member of the team may approve a
+    # release they started. The manifest's `prevent_self_review` carries it; true restores the
+    # four-eyes rule.
+    blocked = bool(manifest.get("prevent_self_review", True))
     current = gh(base, check=False)
-    if env_matches(current, team_id):
+    if env_matches(current, team_id, blocked):
         lines.append(f"environment {env_name}: unchanged")
     else:
-        act(f"set environment {env_name}: reviewers team {manifest['team']}, no self-review, no admin bypass, tags only",
-            lambda: gh("-X", "PUT", base, body=desired_env(team_id)))
+        act(f"set environment {env_name}: reviewers team {manifest['team']}, "
+            f"{'no self-review' if blocked else 'self-review allowed'}, no admin bypass, tags only",
+            lambda: gh("-X", "PUT", base, body=desired_env(team_id, blocked)))
 
     policies = (gh(f"{base}/deployment-branch-policies", check=False) or {}).get("branch_policies", [])
     if any(p.get("name") == pattern and p.get("type") == "tag" for p in policies):
