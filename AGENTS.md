@@ -16,14 +16,21 @@ assets ([assets/](assets/)), and the defaults GitHub applies to every repository
 [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and the
 [pull request template](.github/pull_request_template.md). It lists only public-safe products.
 
+Since 2026-10-03 it also holds the organization's **release signing**: composite actions
+(`actions/`), the reusable `release-publish` workflow, the setup and sync scripts (`scripts/`),
+the product manifest and the release GPG public key (`release-signing/`). Products pin it at the
+tag `v1`; a change here reaches every product only when `v1` moves, which is a release of this
+repository (move the tag to a reviewed `main` commit; never to a branch). How it works and how a
+product adopts it: [release-signing/README.md](release-signing/README.md).
+
 ## Commands
 
 | What | Command |
 |---|---|
 | Install | none — clone it |
-| Test (the gate) | `git diff --check`, then confirm every link target in the changed files resolves |
+| Test (the gate) | `git diff --check`; `python3 -m unittest discover -s tests`; `shellcheck actions/*/*.sh scripts/*.sh`; `actionlint`; then confirm every link target in the changed files resolves |
 | Build | none; GitHub renders `main` |
-| MCP (register + proving call) | none: documents only, no product and no MCP |
+| MCP (register + proving call) | none: no MCP server |
 
 After merge, confirm anonymously that https://github.com/passioncode-ai serves the profile
 ([docs/HANDOFF.md](docs/HANDOFF.md)).

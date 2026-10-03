@@ -1,0 +1,138 @@
+# Publish a product's release: attest every artifact (Sigstore build provenance), write
+# SHA256SUMS and its GPG signature with the organization key, and create or update the GitHub
+# release for the tag — a draft until everything above exists, then published. With
+# `publish: false` (the rehearsal) no release is touched: the signed set is kept as a
+# workflow artifact for 14 days. A published release is never rewritten. Called by a product's release.yml after its signing jobs:
+#
+#   publish:
+#     needs: [macos]
+#     uses: passioncode-ai/.github/.github/workflows/release-publish.yml@v1
+#     with: { publish: ${{ github.event_name == 'push' }} }
+#     secrets: inherit
+#
+# The job runs in the CALLER's `release` environment (GitHub: a reusable workflow's job that
+# names an environment gets the calling repository's), so its secrets and approval rules are
+# the product's. Design: docs/release-signing/DESIGN.md.
+name: release-publish
+
+on:
+  workflow_call:
+    inputs:
+      artifact-pattern:
+        description: Which uploaded artifacts are release files
+        type: string
+        default: release-*
+      tag:
+        description: The release tag; the triggering tag by default
+        type: string
+        default: ""
+      changelog:
+        description: Path of the CHANGELOG whose `## <version>` section becomes the notes
+        type: string
+        default: CHANGELOG.md
+      publish:
+        description: false = a rehearsal — sign and attest, keep the set as a workflow artifact, touch no release
+        type: boolean
+        default: true
+    outputs:
+      release-url:
+        description: The release page
+        value: ${{ jobs.publish.outputs.url }}
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    outputs:
+      url: ${{ steps.release.outputs.url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: ${{ inputs.changelog }}
+          sparse-checkout-cone-mode: false
+
+      - name: Collect the signed artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: ${{ inputs.artifact-pattern }}
+          path: dist
+          merge-multiple: true
+
+      - name: Refuse an empty release
+        run: |
+          shopt -s nullglob
+          files=(dist/*)
+          (( ${#files[@]} > 0 )) || { echo "::error::no artifacts matched '${{ inputs.artifact-pattern }}'"; exit 1; }
+          ls -l dist
+
+      - name: Attest build provenance (Sigstore)
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*
+
+      - name: SHA256SUMS and its signature
+        id: sums
+        uses: passioncode-ai/.github/actions/sign-sums@v1
+        with:
+          folder: dist
+          gpg-key-b64: ${{ secrets.RELEASE_GPG_PRIVATE_KEY_B64 }}
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+
+      - name: Release notes from the CHANGELOG
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+          CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          version=${TAG#v}
+          awk -v v="$version" '
+            $0 ~ "^## " v "([ —-]|$)" {p=1; next}
+            p && /^## / {exit}
+            p {print}' "$CHANGELOG" > notes.md || true
+          if [[ ! -s notes.md ]]; then echo "Release $TAG." > notes.md; fi
+          {
+            echo
+            echo "### Verify"
+            echo
+            echo '```sh'
+            echo "gpg --verify SHA256SUMS.asc SHA256SUMS      # key ${{ steps.sums.outputs.fingerprint }}"
+            echo "shasum -a 256 -c SHA256SUMS --ignore-missing"
+            echo "gh attestation verify <file> -R ${GITHUB_REPOSITORY}"
+            echo '```'
+            echo
+            echo "The organization's public key: https://github.com/passioncode-ai/.github/blob/main/release-signing/passioncode-release-signing.asc"
+          } >> notes.md
+
+      - name: Rehearsal — keep the signed set as a workflow artifact, touch no release
+        if: ${{ !inputs.publish }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-release-${{ inputs.tag || github.ref_name }}
+          path: |
+            dist
+            notes.md
+          retention-days: 14
+
+      - name: Create the release (a draft until every file is up), then publish it
+        if: ${{ inputs.publish }}
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          # A published release is never rewritten: its files are what installed copies were
+          # verified against (SHA256SUMS, update checks). Only a new release or a draft is written.
+          state=$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isDraft -q .isDraft 2>/dev/null || echo absent)
+          case "$state" in
+            absent) gh release create "$TAG" dist/* --draft --verify-tag --title "$TAG" --notes-file notes.md -R "$GITHUB_REPOSITORY" ;;
+            true)   gh release upload "$TAG" dist/* --clobber -R "$GITHUB_REPOSITORY"
+                    gh release edit "$TAG" --notes-file notes.md -R "$GITHUB_REPOSITORY" ;;
+            *)      echo "::error::release $TAG is already published; a published release is not rewritten — cut a new tag"; exit 1 ;;
+          esac
+          gh release edit "$TAG" --draft=false -R "$GITHUB_REPOSITORY"
+          echo "url=$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json url -q .url)" >> "$GITHUB_OUTPUT"
