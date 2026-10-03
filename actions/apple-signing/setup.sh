@@ -43,8 +43,10 @@ if [[ "${SEARCH_LIST:-}" == 1 ]]; then
 fi
 
 identity() { # the full name of the first valid identity whose name starts with $1 and carries the team
+  # `|| true`: no match is an empty answer, not an error. Under `set -e -o pipefail` a failing
+  # grep inside `X=$(identity …)` would end the script silently before the fallback name is tried.
   security find-identity -v -p "${2:-codesigning}" "$KEYCHAIN" \
-    | sed -n 's/^ *[0-9]*) [0-9A-F]\{40\} "\(.*\)"$/\1/p' | grep -F "$1" | grep -F "($TEAM_ID)" | head -n 1
+    | sed -n 's/^ *[0-9]*) [0-9A-F]\{40\} "\(.*\)"$/\1/p' | grep -F "$1" | grep -F "($TEAM_ID)" | head -n 1 || true
 }
 ID=$(identity "Developer ID Application:")
 [[ -n "$ID" ]] || { echo "apple-signing: no valid 'Developer ID Application' identity of team $TEAM_ID in the .p12" >&2; exit 1; }

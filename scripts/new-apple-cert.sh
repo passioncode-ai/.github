@@ -72,7 +72,10 @@ for url in $CA_URLS; do
 done
 [[ -s "$DIR/chain.pem" ]] || { echo "new-apple-cert.sh: no known Apple intermediate matches: $ISSUER" >&2; exit 1; }
 
-openssl rand -base64 30 | tr -d '\n' > "$DIR/p12.password"
+# P12_PASSWORD_FILE reuses one password for several .p12s (the MAS pair shares
+# APPLE_MAS_P12_PASSWORD); otherwise a random one is made.
+if [[ -n "${P12_PASSWORD_FILE:-}" ]]; then cp "$P12_PASSWORD_FILE" "$DIR/p12.password"
+else openssl rand -base64 30 | tr -d '\n' > "$DIR/p12.password"; fi
 openssl pkcs12 -export -legacy -inkey "$DIR/key.pem" -in "$DIR/cert.pem" -certfile "$DIR/chain.pem" \
   -name "PassionCode CI $TYPE" -passout "file:$DIR/p12.password" -out "$DIR/cert.p12"
 rm -f "$DIR/csr.pem" "$DIR/ca.cer" "$DIR/ca.pem"
