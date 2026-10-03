@@ -17,6 +17,10 @@ Decisions and design: [docs/release-signing/](../docs/release-signing/BRIEF.md).
 5. `publish` attests every file (Sigstore), writes `SHA256SUMS` and `SHA256SUMS.asc`, and
    publishes the release. A published release is never rewritten: a fix is a new tag.
 
+**Prereleases.** A product that ships betas adds `"v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"` (or
+`-alpha.N`, `-preview.N`) to its push trigger. Such a tag is published like any release and marked
+a prerelease (`prerelease: auto`). An `-rc` tag is never published.
+
 A **rehearsal** runs the whole path without releasing. Push a `vX.Y.Z-rc.N` tag (the push
 trigger ignores `-rc` tags), then run
 `gh workflow run release.yml --ref vX.Y.Z-rc.N -f publish=false`. The signed set is kept as a
