@@ -97,7 +97,7 @@ macOS, Gatekeeper also assessed a copy that carried a browser's quarantine flag.
 | Fabric Dashboards | `v0.4.1-rc.1`, run 37128282549 | **Green.** DMG notarized and stapled; attestations 4 of 4; CI certificate |
 | Fabric Inbox | `v0.9.0-rc.3`, run 37149725167 | **Green.** DMG notarized and attested. The MAS `.pkg` is signed by "3rd Party Mac Developer Installer (KJ35UYYL22)"; a rehearsal does not upload it |
 | Fabric Switchboard | `v0.5.3-rc.4`, run 37152992597 | **Green.** macOS app notarized (Gatekeeper accepts it); attestations 4 of 4; the Windows receipt says `windows_authenticode: NOT_SIGNED` until Azure identity validation completes. The Windows fixes needed: switchboard #27 (owner check), #28 (runtime tests), #29 (`.gitattributes eol=lf`; Tauri rewrote a CRLF checkout) |
-| Fabric | — | Waits for 0.3.0 on main (preflight refused 0.2.0 correctly) |
+| Fabric | `v0.3.0-rc.2`, run 37148414001 | **Green**, then the real `v0.3.0` (below). The earlier `v0.2.0-rc.1` was refused by preflight, correctly |
 
 Defects the first approved runs found, all fixed:
 - `.github` 1.1.2: invalid YAML in `apple-signing/cleanup/action.yml`, which every macOS
@@ -128,4 +128,16 @@ quarantined app is accepted as "Notarized Developer ID". Installed on the mainta
 from the release; the engine is 0.14.0.
 
 Gap found: `project-observatory full update` reads GitHub anonymously and hit the rate limit on a
-busy machine. It should accept a token.
+busy machine. It should accept a token (engine backlog OBS-31).
+
+Real releases through CI since then (each run's jobs all `success`, checked 2026-10-04 with
+`gh run view <id> --json jobs`):
+
+| Product | Tag | Run | Note |
+|---|---|---|---|
+| Project Observatory | `v0.15.0` | 37159260568 | installed on the maintainer's machine |
+| Fabric Switchboard | `v0.5.3-beta.2` | 37157469157 | prerelease, published by a manual run with `publish=true`; Windows still unsigned (ORGPROFILE-02) |
+| Fabric | `v0.3.0` | 37159239646 | preflight, macos, publish; assets `Fabric-0.3.0-arm64.dmg`, `fabric-0.3.0-mac.json`, `SHA256SUMS`, `SHA256SUMS.asc`; passioncode.ai points at it (site `ee961bd`, reported by the Fabric session) |
+
+Still to come: Fabric Inbox's first real tag (the Mac App Store upload, fabric-inbox B-47),
+Fabric Dashboards (FD-09), Fabric VR, and Switchboard's first stable tag (SB-31).
