@@ -23,7 +23,7 @@ currently captures notes on Quest, with remote Fabric surfaces planned; **Okolos
 browser security from source, with no published installable release yet.
 
 Every product here is open source under AGPL-3.0. For use the AGPL doesn't cover, a commercial
-license is available from contact@passioncode.ai. Released versions keep the license they shipped with:
+license is available at [passioncode.ai/business](https://passioncode.ai/business/). Released versions keep the license they shipped with:
 releases made before the move to AGPL stay under MIT or PolyForm Noncommercial or Internal Use —
 MIT up to Switchboard 0.3.1-beta.1, Project Observatory 0.8.1 and Fabric Dashboards 0.1.0, PolyForm
 for Switchboard 0.4.0-beta.1, Project Observatory 0.8.2 to 0.9.1 and Fabric Dashboards 0.2.0 and
