@@ -20,4 +20,4 @@ its own inherits — [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECUR
 ## License
 
 Open source under the [GNU AGPL-3.0](LICENSE). A [commercial license](COMMERCIAL-LICENSE.md) is
-available for use that does not meet the AGPL's terms — contact@passioncode.ai.
+available for use that does not meet the AGPL's terms — [passioncode.ai/business](https://passioncode.ai/business/).

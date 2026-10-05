@@ -95,7 +95,7 @@ is unclosed or whose reference does not open.
 Every PassionCode.ai repository is licensed under the
 [GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) (its `LICENSE`), or under a commercial
 license from PassionCode.ai for use that does not meet the AGPL's terms (its
-`COMMERCIAL-LICENSE.md`) — contact@passioncode.ai. SPDX:
+`COMMERCIAL-LICENSE.md`) — [passioncode.ai/business](https://passioncode.ai/business/). SPDX:
 `AGPL-3.0-only OR LicenseRef-PassionCode-Commercial`. A version released earlier keeps the license
 it was released under, and third-party code keeps its own.
 
