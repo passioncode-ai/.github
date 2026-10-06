@@ -41,6 +41,13 @@ on:
         description: false = a rehearsal — sign and attest, keep the set as a workflow artifact, touch no release
         type: boolean
         default: true
+      allow-older:
+        description: >
+          true publishes a release that is not newer than the latest one (a maintenance release of
+          an older line) without making it latest. By default such a release is refused: an old run
+          approved late would become "latest", and installed copies read their updates there.
+        type: boolean
+        default: false
     outputs:
       release-url:
         description: The release page
@@ -134,6 +141,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
           PRERELEASE_INPUT: ${{ inputs.prerelease }}
+          ALLOW_OLDER: ${{ inputs.allow-older }}
         run: |
           # A published release is never rewritten: its files are what installed copies were
           # verified against (SHA256SUMS, update checks). Only a new release or a draft is written.
@@ -143,6 +151,24 @@ jobs:
             *) echo "::error::prerelease must be auto, true or false"; exit 1 ;;
           esac
           if [[ "$TAG" =~ -rc(\.|$) ]]; then echo "::error::$TAG is a rehearsal tag; publish it with publish: false"; exit 1; fi
+          # Never behind the latest release: "latest" is where installed copies read their updates, so
+          # an older release published late would offer every copy a downgrade (or a feed that is not
+          # there). Checked before anything is written; allow-older publishes it without "latest".
+          latest_flag=()
+          if [[ "$pre" == false ]]; then
+            latest=$(gh release list -R "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 100 \
+              --json tagName,isLatest -q '.[] | select(.isLatest) | .tagName' || true)
+            core() { [[ "$1" =~ ([0-9]+\.[0-9]+\.[0-9]+) ]] && echo "${BASH_REMATCH[1]}"; }
+            new=$(core "$TAG" || true); cur=$(core "$latest" || true)
+            if [[ -n "$latest" && "$latest" != "$TAG" && -n "$new" && -n "$cur" ]] \
+               && { [[ "$new" == "$cur" ]] || [[ "$(printf '%s\n%s\n' "$cur" "$new" | sort -V | tail -1)" != "$new" ]]; }; then
+              if [[ "$ALLOW_OLDER" != true ]]; then
+                echo "::error::$TAG is not newer than the latest release $latest; cut a newer tag, or set allow-older: true to publish it without making it latest"
+                exit 1
+              fi
+              latest_flag=(--latest=false)
+            fi
+          fi
           state=$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isDraft -q .isDraft 2>/dev/null || echo absent)
           case "$state" in
             absent) gh release create "$TAG" dist/* --draft --verify-tag --title "$TAG" --notes-file notes.md -R "$GITHUB_REPOSITORY" ;;
@@ -150,5 +176,5 @@ jobs:
                     gh release edit "$TAG" --notes-file notes.md -R "$GITHUB_REPOSITORY" ;;
             *)      echo "::error::release $TAG is already published; a published release is not rewritten — cut a new tag"; exit 1 ;;
           esac
-          gh release edit "$TAG" --draft=false --prerelease="$pre" -R "$GITHUB_REPOSITORY"
+          gh release edit "$TAG" --draft=false --prerelease="$pre" "${latest_flag[@]}" -R "$GITHUB_REPOSITORY"
           echo "url=$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json url -q .url)" >> "$GITHUB_OUTPUT"
