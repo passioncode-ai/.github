@@ -2,7 +2,10 @@
 
 Contract: a new tag becomes a draft and is then published; -alpha/-beta/-preview tags are marked
 prerelease under `auto`; an -rc tag is refused (rehearsals never publish); a published
-release is never rewritten; a draft is completed.
+release is never rewritten; a draft is completed; a release that is not newer than the latest
+one is refused before anything is written (an old run approved late would otherwise become
+"latest", and every installed copy reads its update feed from releases/latest), unless
+`allow-older` publishes it without making it latest.
 """
 from __future__ import annotations
 
@@ -42,6 +45,10 @@ FAKE_GH = textwrap.dedent('''\
         published) [[ "$*" == *isDraft* ]] && echo false; exit 0 ;;
       esac
     fi
+    if [[ "$1 $2" == "release list" ]]; then
+      [[ -f "$FAKE_DIR/latest" ]] && cat "$FAKE_DIR/latest"
+      exit 0
+    fi
     [[ "$*" == *"--json url"* ]] && echo https://example.invalid/r
     exit 0
     ''')
@@ -63,10 +70,12 @@ class PublishStep(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def run_step(self, tag: str, state: str = "absent", prerelease: str = "auto"):
+    def run_step(self, tag: str, state: str = "absent", prerelease: str = "auto", latest: str = "", allow_older: str = "false"):
         (self.tmp / "state").write_text(state)
+        if latest:
+            (self.tmp / "latest").write_text(latest + "\n")
         env = {"PATH": f"{self.tmp / 'bin'}:/usr/bin:/bin", "FAKE_DIR": str(self.tmp), "TAG": tag,
-               "PRERELEASE_INPUT": prerelease, "GITHUB_REPOSITORY": "example/product",
+               "PRERELEASE_INPUT": prerelease, "ALLOW_OLDER": allow_older, "GITHUB_REPOSITORY": "example/product",
                "GITHUB_OUTPUT": str(self.tmp / "out")}
         r = subprocess.run(["bash", "-e", str(self.tmp / "step.sh")], cwd=self.tmp, env=env,
                            capture_output=True, text=True)
@@ -105,6 +114,38 @@ class PublishStep(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("release upload v1.2.3", calls)
         self.assertIn("--draft=false", calls)
+
+    def test_a_release_older_than_the_latest_is_refused_before_anything_is_written(self):
+        for tag, latest in [("v0.10.0", "v0.11.0"), ("v0.9.0", "v0.10.0"), ("v1.2.3", "v1.2.4")]:
+            with self.subTest(tag=tag, latest=latest):
+                (self.tmp / "calls").unlink(missing_ok=True)
+                r, calls = self.run_step(tag, latest=latest)
+                self.assertNotEqual(r.returncode, 0)
+                self.assertIn("not newer than the latest release", r.stdout + r.stderr)
+                self.assertNotIn("release create", calls)
+                self.assertNotIn("--draft=false", calls)
+
+    def test_a_newer_release_is_published_as_latest(self):
+        r, calls = self.run_step("v0.12.0", latest="v0.11.0")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("release edit v0.12.0 --draft=false --prerelease=false", calls)
+        self.assertNotIn("--latest=false", calls)
+        r, calls = self.run_step("v0.10.0", latest="v0.9.12")
+        self.assertEqual(r.returncode, 0, r.stderr + " (numeric, not lexical)")
+
+    def test_the_first_release_has_no_latest_to_compare(self):
+        r, calls = self.run_step("v0.1.0")
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_allow_older_publishes_without_making_it_latest(self):
+        r, calls = self.run_step("v0.10.1", latest="v0.11.0", allow_older="true")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("release edit v0.10.1 --draft=false --prerelease=false --latest=false", calls)
+
+    def test_a_prerelease_never_competes_for_latest(self):
+        r, calls = self.run_step("v0.5.4-beta.1", latest="v0.6.0")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("--prerelease=true", calls)
 
 
 if __name__ == "__main__":

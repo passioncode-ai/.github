@@ -22,6 +22,14 @@ Decisions and design: [docs/release-signing/](../docs/release-signing/BRIEF.md).
 `-alpha.N`, `-preview.N`) to its push trigger. Such a tag is published like any release and marked
 a prerelease (`prerelease: auto`). An `-rc` tag is never published.
 
+**Never behind the latest release.** A release whose version is not newer than the repository's
+latest release is refused before anything is written: "latest" is where installed copies read their
+update feed (`releases/latest/download/…`), so an old run approved late would offer every copy a
+downgrade, or a feed that is not there. Seen 2026-10-07: Fabric Inbox's v0.10.0 run had waited
+for approval for two days while v0.11.0 was already latest. A maintenance release of an older
+line sets `allow-older: true` and is published without becoming latest. Prereleases never compete
+for latest.
+
 A **rehearsal** runs the whole path without releasing. Push a `vX.Y.Z-rc.N` tag (the push
 trigger ignores `-rc` tags), then run
 `gh workflow run release.yml --ref vX.Y.Z-rc.N -f publish=false`. The signed set is kept as a
