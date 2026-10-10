@@ -40,7 +40,8 @@ SCRIPT = textwrap.dedent('''\
         fail("ResourceNotFound")
     apps = s.setdefault("apps", [])
     if head == ["ad", "app", "list"]:
-        out([a for a in apps if a["displayName"] == opt("--display-name")])
+        # Like Graph's filter behind `az ad app list --display-name`: startswith, not equality.
+        out([a for a in apps if a["displayName"].startswith(opt("--display-name"))])
     if head == ["ad", "app", "show"]:
         hit = [a for a in apps if a["appId"] == opt("--id")]
         out(hit[0]) if hit else fail("Resource does not exist")
