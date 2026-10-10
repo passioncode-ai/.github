@@ -191,6 +191,23 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
   only the newest link works.
 - **A role assignment can take minutes to reach the signing service**: a 403 right after
   `setup-windows-signing.py --apply` is retried by a later rehearsal, not by widening the role.
+- **electron-builder never signs a prepackaged app's own files.** With `prepackaged`, its pack step
+  returns early, and the signing of the app's `.exe` and `.dll` (`doSignAfterPack` → `signApp`)
+  lives inside that step; `azureSignOptions` then signs only `elevate.exe`, the uninstaller and the
+  installer, so the installed program is unsigned (Inbox, 2026-10-10, app-builder-lib 26.15). Build
+  the app folder in one step, sign its top-level `exe,dll` with `windows-signing@v1`
+  (`files-folder`), then let electron-builder wrap the signed folder (Inbox `dist-platform.mjs
+  --stage app|package`).
+- **The signer is the validated person, not the organization.** The Public Trust profile's
+  certificates read `CN=Siarhei Sheleh, O=Siarhei Sheleh, L=Warsaw, S=Mazowieckie, C=PL`. Pass that
+  to `expected-subject` (`O=Siarhei Sheleh`), use the CN as electron-builder's `publisherName`, and
+  pin an updater that checks Authenticode to it, with a timestamp: Inbox's looked for "PassionCode"
+  and would have refused every signed update.
+- **An arm64 NSIS payload needs the BCJ filter.** 7-Zip picks its own ARM64 filter for arm64
+  executables; NSIS's `nsis7z` cannot decode it and skips every `.exe` and `.dll` without an error,
+  so the installer exits 0 and leaves only data files (Inbox, windows-11-arm). Set
+  `ELECTRON_BUILDER_7Z_FILTER=BCJ` for the arm64 build, and launch the installed app on
+  `windows-11-arm` before publish.
 - **Only the job's own sign-in signs.** `windows-signing` excludes every other Azure credential
   the runner might carry; never add a client secret.
 
