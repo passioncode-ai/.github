@@ -69,7 +69,7 @@
       ],
       "vars": {
         "APPLE_TEAM_ID": "KJ35UYYL22",
-        "AZURE_SIGNING_ENABLED": "false"
+        "AZURE_SIGNING_ENABLED": "true"
       },
       "windows": true
     },
