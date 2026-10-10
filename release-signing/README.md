@@ -208,6 +208,10 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
   so the installer exits 0 and leaves only data files (Inbox, windows-11-arm). Set
   `ELECTRON_BUILDER_7Z_FILTER=BCJ` for the arm64 build, and launch the installed app on
   `windows-11-arm` before publish.
+- **A job that calls a reusable workflow grants `id-token: write` whenever any job inside it asks
+  for it**, even one its condition would skip: GitHub checks the nested permissions before it runs
+  anything, and the run ends in `startup_failure` with no job started (Fabric Dashboards
+  `v0.6.7-rc.1`; fixed in fabric-dashboards #64).
 - **Only the job's own sign-in signs.** `windows-signing` excludes every other Azure credential
   the runner might carry; never add a client secret.
 
