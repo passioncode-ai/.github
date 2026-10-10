@@ -157,7 +157,7 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
    [products.json](products.json).
 2. `scripts/setup-windows-signing.py --repo passioncode-ai/<repo>` (dry run), then `--apply`:
    the app registration `github-release-signing-<repo>`, its service principal, the federated
-   credential `repo:passioncode-ai/<repo>:environment:release`, the signer role on the account,
+   credentials for the `release` environment (both subject forms, below), the signer role on the account,
    and `AZURE_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID`. An identity the environment
    already names is kept.
 3. `scripts/setup-release-env.py --repo passioncode-ai/<repo> --apply`: the account's endpoint,
@@ -169,6 +169,12 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
 
 **What the first products learned (check these in yours):**
 
+- **GitHub presents the OIDC subject with immutable ids**:
+  `repo:passioncode-ai@320985480/<repo>@<repo id>:environment:release`, not
+  `repo:passioncode-ai/<repo>:environment:release` (the organization has no custom subject
+  template). Switchboard's first signed run (v0.6.16, 2026-10-10) failed at `azure/login` on x64 and
+  arm64 with `AADSTS700213: No matching federated identity record` because its app held only the
+  name form. `setup-windows-signing.py` registers both; run it again for an identity made by hand.
 - **No timestamp, no release.** The profile's certificates live about three days; a signature
   without an RFC 3161 timestamp stops validating when its certificate expires, so the release
   would read "unsigned" to every user three days after shipping. `verify` refuses it.

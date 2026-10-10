@@ -11,9 +11,13 @@ the repository. For the repository it makes, only where missing:
   * an app registration `<app_prefix><repo name>` and its service principal — unless the
     environment's AZURE_CLIENT_ID already names an app, which is then kept (identities made by
     hand before this script);
-  * one federated credential, subject `repo:<owner>/<repo>:environment:release`, issuer GitHub
-    Actions, audience `api://AzureADTokenExchange`: tokens go only to jobs in that environment,
-    and no client secret exists;
+  * federated credentials for that environment only, issuer GitHub Actions, audience
+    `api://AzureADTokenExchange`, in both subject forms GitHub uses: the immutable one,
+    `repo:<owner>@<owner id>/<repo>@<repo id>:environment:release` (what GitHub presents since
+    2026: Switchboard's first signed run, 2026-10-10, failed at azure/login with AADSTS700213
+    "No matching federated identity record" holding only the other), and the name form
+    `repo:<owner>/<repo>:environment:release`. Tokens go only to jobs in that environment, and no
+    client secret exists;
   * one role assignment, `azure_signing.role` on the Artifact Signing account and nothing broader;
   * the environment variables AZURE_CLIENT_ID, AZURE_TENANT_ID and AZURE_SUBSCRIPTION_ID.
 
@@ -64,6 +68,15 @@ def gh(*args: str, body: dict | None = None, check: bool = True):
     return json.loads(proc.stdout or "{}")
 
 
+def subjects(repo: str, env_name: str) -> list[tuple[str, str]]:
+    """The OIDC subjects a job in `env_name` of `repo` may present: immutable ids first."""
+    owner, name = repo.split("/")
+    owner_id = gh(f"orgs/{owner}")["id"]
+    repo_id = gh(f"repos/{repo}")["id"]
+    return [(f"repo:{owner}@{owner_id}/{name}@{repo_id}:environment:{env_name}", "-ids"),
+            (f"repo:{repo}:environment:{env_name}", "")]
+
+
 def setup(repo: str, manifest: dict, apply: bool) -> list[str]:
     azure = manifest["azure_signing"]
     env_name = manifest["environment"]
@@ -107,14 +120,14 @@ def setup(repo: str, manifest: dict, apply: bool) -> list[str]:
         lines.append(f"{prefix}create its service principal")
         sp = az("ad", "sp", "create", "--id", app_id) if apply else {"id": "<new>"}
 
-    subject = f"repo:{repo}:environment:{env_name}"
     fics = az("ad", "app", "federated-credential", "list", "--id", app_id) if app_id != "<new>" else []
-    if any(f.get("subject") == subject and f.get("issuer") == ISSUER for f in fics):
-        lines.append(f"federated credential {subject}: unchanged")
-    else:
+    for subject, suffix in subjects(repo, env_name):
+        if any(f.get("subject") == subject and f.get("issuer") == ISSUER for f in fics):
+            lines.append(f"federated credential {subject}: unchanged")
+            continue
         lines.append(f"{prefix}add federated credential {subject}")
         if apply:
-            params = {"name": f"github-{repo.split('/')[1]}-{env_name}", "issuer": ISSUER, "subject": subject,
+            params = {"name": f"github-{repo.split('/')[1]}-{env_name}{suffix}", "issuer": ISSUER, "subject": subject,
                       "audiences": [AUDIENCE], "description": "GitHub Actions release environment (setup-windows-signing.py)"}
             az("ad", "app", "federated-credential", "create", "--id", app_id, "--parameters", json.dumps(params))
 
