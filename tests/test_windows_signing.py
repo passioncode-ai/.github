@@ -124,6 +124,7 @@ class SetupWindowsSigning(unittest.TestCase):
         self.assertEqual(gh_writes(self.tmp), [])
         for words in ("would create app registration github-release-signing-fabric-switchboard",
                       "would add federated credential repo:passioncode-ai/fabric-switchboard:environment:release",
+                      "would add federated credential repo:passioncode-ai@320985480/fabric-switchboard@1389081624:environment:release",
                       "would assign", "would create variable AZURE_CLIENT_ID"):
             self.assertIn(words, result.stdout)
 
@@ -133,10 +134,15 @@ class SetupWindowsSigning(unittest.TestCase):
         s = fakeaz.state(self.tmp)
         [app] = s["apps"]
         self.assertEqual(app["displayName"], "github-release-signing-fabric-switchboard")
-        [fic] = app["fic"]
-        self.assertEqual(fic["subject"], "repo:passioncode-ai/fabric-switchboard:environment:release")
-        self.assertEqual(fic["issuer"], "https://token.actions.githubusercontent.com")
-        self.assertEqual(fic["audiences"], ["api://AzureADTokenExchange"])
+        # Both forms GitHub presents: the immutable ids (what it sends today — Switchboard's first
+        # signed run failed with AADSTS700213 holding only the name form) and the name form.
+        self.assertEqual([f["subject"] for f in app["fic"]],
+                         ["repo:passioncode-ai@320985480/fabric-switchboard@1389081624:environment:release",
+                          "repo:passioncode-ai/fabric-switchboard:environment:release"])
+        self.assertEqual(len({f["name"] for f in app["fic"]}), 2)
+        for fic in app["fic"]:
+            self.assertEqual(fic["issuer"], "https://token.actions.githubusercontent.com")
+            self.assertEqual(fic["audiences"], ["api://AzureADTokenExchange"])
         [role] = s["roles"]
         self.assertEqual(role["scope"], ACCOUNT_ID)
         self.assertEqual(role["roleDefinitionName"], manifest()["azure_signing"]["role"])
@@ -170,6 +176,21 @@ class SetupWindowsSigning(unittest.TestCase):
         self.assertFalse([a for a in fakeaz.creates(self.tmp) if a[:3] == ["ad", "app", "create"]])
         self.assertEqual(len(fakeaz.state(self.tmp)["apps"]), 1)
         self.assertIn("made-by-hand", result.stdout)
+
+    def test_an_identity_with_only_the_name_form_gets_the_immutable_one(self):
+        # Switchboard's app as it stood on 2026-10-10.
+        self.az_state["apps"] = [{"appId": "f50cead6", "id": "obj-sb", "displayName": "github-release-signing-fabric-switchboard",
+                                  "fic": [{"name": "old", "issuer": "https://token.actions.githubusercontent.com",
+                                           "subject": "repo:passioncode-ai/fabric-switchboard:environment:release",
+                                           "audiences": ["api://AzureADTokenExchange"]}]}]
+        gh_state = {"team_id": 42, "variables": [{"name": "AZURE_CLIENT_ID", "value": "f50cead6"}]}
+        result = run(SETUP_WIN, ["--repo", self.REPO, "--apply"], self.env(gh_state))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        subjects = [f["subject"] for f in fakeaz.state(self.tmp)["apps"][0]["fic"]]
+        self.assertEqual(sorted(subjects), sorted(["repo:passioncode-ai/fabric-switchboard:environment:release",
+                                                   "repo:passioncode-ai@320985480/fabric-switchboard@1389081624:environment:release"]))
+        fic_creates = [a for a in fakeaz.creates(self.tmp) if a[:4] == ["ad", "app", "federated-credential", "create"]]
+        self.assertEqual(len(fic_creates), 1)
 
     def test_a_repository_not_declared_for_windows_is_refused(self):
         repo = next(r for r, c in manifest()["repos"].items() if not c.get("windows"))

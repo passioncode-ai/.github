@@ -24,6 +24,10 @@ SCRIPT = textwrap.dedent('''\
     path = next((a for a in argv[1:] if not a.startswith("-") and "/" in a), "") if argv[:1] == ["api"] else ""
     method = argv[argv.index("-X") + 1] if "-X" in argv else "GET"
     if argv[:1] == ["api"]:
+        if method == "GET" and path.startswith("repos/") and path.count("/") == 2:
+            print(json.dumps({{"id": state.get("repo_id", 1389081624), "full_name": path[6:]}})); sys.exit(0)
+        if method == "GET" and path.startswith("orgs/") and path.count("/") == 1:
+            print(json.dumps({{"id": state.get("org_id", 320985480), "login": path[5:]}})); sys.exit(0)
         if path.startswith("orgs/") and "/teams/" in path and "/repos/" in path and method == "GET":
             repo = path.split("/repos/", 1)[1]
             if repo in state.get("team_repos", []):
