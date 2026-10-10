@@ -192,6 +192,16 @@ class SetupWindowsSigning(unittest.TestCase):
         fic_creates = [a for a in fakeaz.creates(self.tmp) if a[:4] == ["ad", "app", "federated-credential", "create"]]
         self.assertEqual(len(fic_creates), 1)
 
+    def test_another_products_app_whose_name_starts_the_same_is_not_taken(self):
+        self.az_state["apps"] = [{"appId": "f50cead6", "id": "obj-sb", "displayName": "github-release-signing-fabric-switchboard", "fic": []}]
+        result = run(SETUP_WIN, ["--repo", "passioncode-ai/fabric", "--apply"], self.env())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        names = [a["displayName"] for a in fakeaz.state(self.tmp)["apps"]]
+        self.assertEqual(names, ["github-release-signing-fabric-switchboard", "github-release-signing-fabric"])
+        variables = {json.loads(c["stdin"])["name"]: json.loads(c["stdin"])["value"] for c in gh_writes(self.tmp)}
+        self.assertNotEqual(variables["AZURE_CLIENT_ID"], "f50cead6")
+        self.assertEqual(fakeaz.state(self.tmp)["apps"][0]["fic"], [])
+
     def test_a_repository_not_declared_for_windows_is_refused(self):
         repo = next(r for r, c in manifest()["repos"].items() if not c.get("windows"))
         result = run(SETUP_WIN, ["--repo", repo, "--apply"], self.env())

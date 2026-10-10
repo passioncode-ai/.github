@@ -101,7 +101,10 @@ def setup(repo: str, manifest: dict, apply: bool) -> list[str]:
             lines.append(f"app registration {app['displayName']} ({app['appId']}): kept, named by AZURE_CLIENT_ID")
     name = azure["app_prefix"] + repo.split("/")[1]
     if not app:
-        hits = az("ad", "app", "list", "--display-name", name)
+        # `--display-name` is a startswith filter: "github-release-signing-fabric" also finds
+        # "...-fabric-switchboard", so only an exact name counts (caught in the dry run of
+        # 2026-10-10, before anything was written).
+        hits = [a for a in az("ad", "app", "list", "--display-name", name) if a.get("displayName") == name]
         if hits:
             app = hits[0]
             lines.append(f"app registration {name} ({app['appId']}): unchanged")
