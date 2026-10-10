@@ -203,6 +203,10 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
   to `expected-subject` (`O=Siarhei Sheleh`), use the CN as electron-builder's `publisherName`, and
   pin an updater that checks Authenticode to it, with a timestamp: Inbox's looked for "PassionCode"
   and would have refused every signed update.
+- **Electron ships DLLs already signed by Microsoft** (`d3dcompiler_47.dll`). Signing a whole folder
+  with `expected-subject` refuses them: they are Valid and timestamped, but not the profile's. Sign
+  only the files whose status is `NotSigned` (with the subject check) and verify every file as Valid
+  and timestamped without it (Inbox 0.14.1-rc.1).
 - **An arm64 NSIS payload needs the BCJ filter.** 7-Zip picks its own ARM64 filter for arm64
   executables; NSIS's `nsis7z` cannot decode it and skips every `.exe` and `.dll` without an error,
   so the installer exits 0 and leaves only data files (Inbox, windows-11-arm). Set
