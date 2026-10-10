@@ -1,0 +1,33 @@
+name: Verify Windows signatures
+description: >
+  Fail unless every named file carries a Valid Authenticode signature with an RFC 3161 timestamp
+  (and, when expected-subject is given, from that signer), and write a JSON report for the
+  product's receipt. Runs on Windows runners. Use it after any signing path, including
+  electron-builder's azureSignOptions, so that no release ships a file that does not validate.
+inputs:
+  files:
+    description: Newline-separated paths or wildcards, one or more files each
+    required: true
+  out:
+    description: Where the JSON report goes
+    required: false
+    default: ${{ runner.temp }}/signatures.json
+  expected-subject:
+    description: A part of the signer certificate's subject every file must carry (for example "O=Siarhei Sheleh")
+    required: false
+    default: ""
+outputs:
+  report:
+    description: Path of the JSON report
+    value: ${{ inputs.out }}
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      env:
+        FILES: ${{ inputs.files }}
+        OUT: ${{ inputs.out }}
+        EXPECTED_SUBJECT: ${{ inputs.expected-subject }}
+      run: |
+        & "$env:GITHUB_ACTION_PATH/verify.ps1" -Files $env:FILES -Out $env:OUT -ExpectedSubject $env:EXPECTED_SUBJECT
+        if (-not $?) { exit 1 }

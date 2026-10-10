@@ -29,6 +29,15 @@
       "ANDROID_KEY_PASSWORD"
     ]
   },
+  "azure_signing": {
+    "comment": "Windows Authenticode for every product that ships for Windows (fabric-workspace knowledge/platforms.md PL-03): one Azure Artifact Signing account and Public Trust certificate profile; each repository signs in with its own app registration, whose only federated credential is repo:<repo>:environment:release and whose only role is `role` on this account. scripts/setup-windows-signing.py makes that identity; setup-release-env.py sets the account's variables on every repository with \"windows\": true. Tenant and subscription are read from the operator's az session, never written here. The profile was created with includeStreetAddress and includePostalCode false: keep them false on a new profile.",
+    "resource_group": "rg-passioncode-signing",
+    "account": "passioncodesigning",
+    "endpoint": "https://neu.codesigning.azure.net/",
+    "certificate_profile": "passioncode-public-trust",
+    "role": "Artifact Signing Certificate Profile Signer",
+    "app_prefix": "github-release-signing-"
+  },
   "repos": {
     "passioncode-ai/project-observatory-dashboard": {
       "groups": [
@@ -36,8 +45,10 @@
         "gpg"
       ],
       "vars": {
-        "APPLE_TEAM_ID": "KJ35UYYL22"
-      }
+        "APPLE_TEAM_ID": "KJ35UYYL22",
+        "AZURE_SIGNING_ENABLED": "false"
+      },
+      "windows": true
     },
     "passioncode-ai/fabric-dashboards": {
       "groups": [
@@ -45,8 +56,10 @@
         "gpg"
       ],
       "vars": {
-        "APPLE_TEAM_ID": "KJ35UYYL22"
-      }
+        "APPLE_TEAM_ID": "KJ35UYYL22",
+        "AZURE_SIGNING_ENABLED": "false"
+      },
+      "windows": true
     },
     "passioncode-ai/fabric-inbox": {
       "groups": [
@@ -55,8 +68,10 @@
         "gpg"
       ],
       "vars": {
-        "APPLE_TEAM_ID": "KJ35UYYL22"
-      }
+        "APPLE_TEAM_ID": "KJ35UYYL22",
+        "AZURE_SIGNING_ENABLED": "false"
+      },
+      "windows": true
     },
     "passioncode-ai/fabric": {
       "groups": [
@@ -64,8 +79,10 @@
         "gpg"
       ],
       "vars": {
-        "APPLE_TEAM_ID": "KJ35UYYL22"
-      }
+        "APPLE_TEAM_ID": "KJ35UYYL22",
+        "AZURE_SIGNING_ENABLED": "false"
+      },
+      "windows": true
     },
     "passioncode-ai/fabric-switchboard": {
       "groups": [
@@ -74,8 +91,9 @@
       ],
       "vars": {
         "APPLE_TEAM_ID": "KJ35UYYL22",
-        "AZURE_SIGNING_ENABLED": "false"
-      }
+        "AZURE_SIGNING_ENABLED": "true"
+      },
+      "windows": true
     },
     "passioncode-ai/fabric-vr": {
       "groups": [

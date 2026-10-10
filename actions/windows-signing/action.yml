@@ -1,0 +1,109 @@
+name: Windows signing
+description: >
+  Sign Windows files with the organization's Azure Artifact Signing certificate profile, then
+  verify them. Signs the job in over OIDC (no stored secret), signs with an SHA-256 digest and an
+  RFC 3161 timestamp, and fails unless every file is Valid and timestamped; writes a JSON report
+  for the product's receipt. Give `files` or `files-folder`. The job needs
+  `permissions: id-token: write`, `environment: release` and a Windows runner. A product that
+  signs inside its packager (electron-builder) uses ./login and ./verify instead.
+inputs:
+  files:
+    description: Newline-separated absolute paths of the files to sign
+    required: false
+    default: ""
+  files-folder:
+    description: A folder whose files are signed (with files-folder-filter)
+    required: false
+    default: ""
+  files-folder-filter:
+    description: Comma-separated extensions inside files-folder, for example "exe,dll"
+    required: false
+    default: exe
+  client-id:
+    description: vars.AZURE_CLIENT_ID
+    required: true
+  tenant-id:
+    description: vars.AZURE_TENANT_ID
+    required: true
+  subscription-id:
+    description: vars.AZURE_SUBSCRIPTION_ID
+    required: true
+  endpoint:
+    description: vars.AZURE_SIGNING_ENDPOINT
+    required: true
+  account:
+    description: vars.AZURE_SIGNING_ACCOUNT
+    required: true
+  certificate-profile:
+    description: vars.AZURE_CERTIFICATE_PROFILE
+    required: true
+  expected-subject:
+    description: A part of the signer's subject every file must carry; empty skips the check
+    required: false
+    default: ""
+  report:
+    description: Where the JSON report goes
+    required: false
+    default: ${{ runner.temp }}/signatures.json
+outputs:
+  report:
+    description: Path of the JSON report
+    value: ${{ inputs.report }}
+runs:
+  using: composite
+  steps:
+    - name: What to sign
+      id: targets
+      shell: pwsh
+      env:
+        FILES: ${{ inputs.files }}
+        FOLDER: ${{ inputs.files-folder }}
+        FILTER: ${{ inputs.files-folder-filter }}
+      run: |
+        if (($env:FILES.Trim() -eq '') -eq ($env:FOLDER.Trim() -eq '')) { throw 'windows-signing: give exactly one of files and files-folder' }
+        if ($env:FOLDER.Trim() -ne '') {
+          $patterns = foreach ($ext in ($env:FILTER -split ',')) { Join-Path $env:FOLDER.Trim() ("*." + $ext.Trim()) }
+        } else {
+          $patterns = $env:FILES -split "`r?`n" | Where-Object { $_.Trim() -ne '' }
+        }
+        $delim = "EOF_$([guid]::NewGuid().ToString('N'))"
+        "patterns<<$delim" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+        $patterns | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+        $delim | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+    - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
+    # Only the Azure CLI credential azure/login just created is allowed: any other credential the
+    # runner might carry is excluded, so a signature can only come from this job's OIDC identity.
+    - uses: Azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+      with:
+        endpoint: ${{ inputs.endpoint }}
+        signing-account-name: ${{ inputs.account }}
+        certificate-profile-name: ${{ inputs.certificate-profile }}
+        files: ${{ inputs.files }}
+        files-folder: ${{ inputs.files-folder }}
+        files-folder-filter: ${{ inputs.files-folder != '' && inputs.files-folder-filter || '' }}
+        file-digest: SHA256
+        timestamp-rfc3161: http://timestamp.acs.microsoft.com
+        timestamp-digest: SHA256
+        exclude-environment-credential: true
+        exclude-workload-identity-credential: true
+        exclude-managed-identity-credential: true
+        exclude-shared-token-cache-credential: true
+        exclude-visual-studio-credential: true
+        exclude-visual-studio-code-credential: true
+        exclude-azure-cli-credential: false
+        exclude-azure-powershell-credential: true
+        exclude-azure-developer-cli-credential: true
+        exclude-interactive-browser-credential: true
+    - name: Verify the signatures
+      shell: pwsh
+      env:
+        FILES: ${{ steps.targets.outputs.patterns }}
+        OUT: ${{ inputs.report }}
+        EXPECTED_SUBJECT: ${{ inputs.expected-subject }}
+      run: |
+        & "$env:GITHUB_ACTION_PATH/verify/verify.ps1" -Files $env:FILES -Out $env:OUT -ExpectedSubject $env:EXPECTED_SUBJECT
+        if (-not $?) { exit 1 }

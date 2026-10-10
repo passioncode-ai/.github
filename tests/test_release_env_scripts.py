@@ -95,7 +95,12 @@ class SetupReleaseEnv(unittest.TestCase):
                                           "reviewers": [{"type": "Team", "reviewer": {"id": 42}}]}],
                     "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}},
             "policies": [{"name": "v*", "type": "tag"}],
-            "variables": [{"name": "APPLE_TEAM_ID", "value": "KJ35UYYL22"}]})
+            "variables": [{"name": "APPLE_TEAM_ID", "value": "KJ35UYYL22"},
+                          # Dashboards ships for Windows: the shared Artifact Signing account's too.
+                          {"name": "AZURE_SIGNING_ENABLED", "value": "false"},
+                          {"name": "AZURE_SIGNING_ENDPOINT", "value": "https://neu.codesigning.azure.net/"},
+                          {"name": "AZURE_SIGNING_ACCOUNT", "value": "passioncodesigning"},
+                          {"name": "AZURE_CERTIFICATE_PROFILE", "value": "passioncode-public-trust"}]})
         result = run(SETUP, ["--repo", REPO, "--apply"], env)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(mutating(fakegh.calls(self.tmp)), [], result.stdout)
