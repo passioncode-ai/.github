@@ -97,7 +97,7 @@ class SetupReleaseEnv(unittest.TestCase):
             "policies": [{"name": "v*", "type": "tag"}],
             "variables": [{"name": "APPLE_TEAM_ID", "value": "KJ35UYYL22"},
                           # Dashboards ships for Windows: the shared Artifact Signing account's too.
-                          {"name": "AZURE_SIGNING_ENABLED", "value": "false"},
+                          {"name": "AZURE_SIGNING_ENABLED", "value": json.loads(MANIFEST.read_text())["repos"][REPO]["vars"]["AZURE_SIGNING_ENABLED"]},
                           {"name": "AZURE_SIGNING_ENDPOINT", "value": "https://neu.codesigning.azure.net/"},
                           {"name": "AZURE_SIGNING_ACCOUNT", "value": "passioncodesigning"},
                           {"name": "AZURE_CERTIFICATE_PROFILE", "value": "passioncode-public-trust"}]})
