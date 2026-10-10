@@ -10,7 +10,10 @@ For each repository in release-signing/products.json:
     the tag's author included; true restores four eyes);
   * can_admins_bypass = false: an organization admin cannot skip the review either;
   * deployments only from tags matching the manifest's pattern (`v*`);
-  * the repository's environment variables (APPLE_TEAM_ID, AZURE_SIGNING_ENABLED, …).
+  * the repository's environment variables (APPLE_TEAM_ID, AZURE_SIGNING_ENABLED, …), and for a
+    repository with "windows": true the shared Artifact Signing account's AZURE_SIGNING_ENDPOINT,
+    AZURE_SIGNING_ACCOUNT and AZURE_CERTIFICATE_PROFILE (its own Azure identity is
+    scripts/setup-windows-signing.py's).
 
 A dry run reads and prints the plan; --apply writes. Running it twice changes nothing the
 second time. Secrets are not handled here: scripts/sync-release-secrets.py sets them.
@@ -57,6 +60,18 @@ def env_matches(current: dict | None, team_id: int, self_review_blocked: bool) -
             and current.get("deployment_branch_policy") == {"protected_branches": False, "custom_branch_policies": True})
 
 
+def desired_vars(conf: dict, manifest: dict) -> dict[str, str]:
+    wanted = {}
+    if conf.get("windows"):
+        azure = manifest["azure_signing"]
+        wanted = {"AZURE_SIGNING_ENDPOINT": azure["endpoint"], "AZURE_SIGNING_ACCOUNT": azure["account"],
+                  "AZURE_CERTIFICATE_PROFILE": azure["certificate_profile"]}
+    out = dict(conf.get("vars", {}))  # the repository's own first; its value wins
+    for name, value in wanted.items():
+        out.setdefault(name, value)
+    return out
+
+
 def setup(repo: str, conf: dict, manifest: dict, team_id: int, apply: bool) -> list[str]:
     env_name, pattern = manifest["environment"], manifest["tag_pattern"]
     base = f"repos/{repo}/environments/{env_name}"
@@ -98,7 +113,7 @@ def setup(repo: str, conf: dict, manifest: dict, team_id: int, apply: bool) -> l
             lambda: gh("-X", "POST", f"{base}/deployment-branch-policies", body={"name": pattern, "type": "tag"}))
 
     existing = {v["name"]: v.get("value") for v in (gh(f"{base}/variables", check=False) or {}).get("variables", [])}
-    for name, value in conf.get("vars", {}).items():
+    for name, value in desired_vars(conf, manifest).items():
         if existing.get(name) == value:
             lines.append(f"variable {name}: unchanged")
         elif name in existing:

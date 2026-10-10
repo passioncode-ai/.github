@@ -1,0 +1,25 @@
+name: Azure sign-in for Windows signing
+description: >
+  Sign the job in to Azure over OIDC (no stored secret) with the release environment's
+  AZURE_CLIENT_ID, AZURE_TENANT_ID and AZURE_SUBSCRIPTION_ID, for a signing path that calls Azure
+  Artifact Signing itself (electron-builder's azureSignOptions picks up this Azure CLI sign-in).
+  The job needs `permissions: id-token: write` and `environment: release`. Follow the signing with
+  passioncode-ai/.github/actions/windows-signing/verify.
+inputs:
+  client-id:
+    description: vars.AZURE_CLIENT_ID
+    required: true
+  tenant-id:
+    description: vars.AZURE_TENANT_ID
+    required: true
+  subscription-id:
+    description: vars.AZURE_SUBSCRIPTION_ID
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
