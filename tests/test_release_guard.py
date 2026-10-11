@@ -120,6 +120,20 @@ class ReleaseGuard(unittest.TestCase):
         post = next(c for c in calls if "POST" in c)
         self.assertIn(f"ref={TAG}", post)
 
+    def test_a_cancelled_run_is_started_again_on_the_tag_once(self):
+        cancelled = [run_of("completed", "cancelled", "2026-10-11T09:00:00Z")]
+        result, state = self.guard({"runs": {"ci.yml": [cancelled]},
+                                    "after_dispatch": {"ci.yml": [cancelled + [run_of("completed", "success")]]}})
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(state["dispatched"], ["ci.yml"])
+
+    def test_a_second_cancellation_refuses(self):
+        cancelled = [run_of("completed", "cancelled")]
+        result, state = self.guard({"runs": {"ci.yml": [cancelled]}, "after_dispatch": {"ci.yml": [cancelled]}})
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(state["dispatched"], ["ci.yml"])
+        self.assertIn("concluded cancelled", result.stdout)
+
     def test_without_dispatch_a_missing_run_times_out_and_refuses(self):
         result, state = self.guard({"runs": {"ci.yml": [[]]}}, DISPATCH="false")
         self.assertEqual(result.returncode, 1)
