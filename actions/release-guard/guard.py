@@ -16,8 +16,9 @@ Checks, in order, each one failing the job with what to do:
      `-rc` tag, by the release-tags ruleset);
   2. main contains the tagged commit (the compare API: `identical` or main `ahead`);
   3. for each listed workflow, its newest run on that exact commit concluded `success`; with no
-     run after GRACE_SECONDS the guard starts one on the tag (workflow_dispatch) when DISPATCH is
-     on, and waits up to TIMEOUT_MINUTES for it.
+     run after GRACE_SECONDS, or with the newest run cancelled (cancel-in-progress on main), the
+     guard starts one on the tag (workflow_dispatch) once when DISPATCH is on, and waits up to
+     TIMEOUT_MINUTES for it.
 An empty WORKFLOWS list means the release workflow runs its own gate before signing; only the
 ancestry check applies then.
 """
@@ -67,6 +68,12 @@ def wait_for(repo: str, workflow: str, sha: str, tag: str, *, dispatch: bool, de
                 gh("-X", "POST", f"repos/{repo}/actions/workflows/{workflow}/dispatches", "-f", f"ref={tag}")
                 dispatched = True
                 print(f"{workflow}: no run on {sha[:7]}; started one on {tag}")
+        elif run.get("status") == "completed" and run.get("conclusion") == "cancelled" and dispatch and not dispatched:
+            # A CI with cancel-in-progress loses the tagged commit's run to the next push on main;
+            # a run on the tag is in its own concurrency group, so start one there, once.
+            gh("-X", "POST", f"repos/{repo}/actions/workflows/{workflow}/dispatches", "-f", f"ref={tag}")
+            dispatched = True
+            print(f"{workflow}: the run on {sha[:7]} was cancelled; started one on {tag}")
         elif run.get("status") == "completed":
             if run.get("conclusion") == "success":
                 summary(f"- {workflow}: success on {sha[:7]} ({run.get('html_url', '')})")
