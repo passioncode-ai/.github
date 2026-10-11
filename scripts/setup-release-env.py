@@ -115,7 +115,7 @@ def desired_vars(conf: dict, manifest: dict) -> dict[str, str]:
     return out
 
 
-def setup(repo: str, conf: dict, manifest: dict, team_id: int, apply: bool) -> list[str]:
+def setup(repo: str, conf: dict, manifest: dict, team_id: int, apply: bool, cancel_waiting: bool = False) -> list[str]:
     env_name, pattern = manifest["environment"], manifest["tag_pattern"]
     base = f"repos/{repo}/environments/{env_name}"
     lines: list[str] = []
@@ -145,6 +145,17 @@ def setup(repo: str, conf: dict, manifest: dict, team_id: int, apply: bool) -> l
     if by_checks and by_people:
         lines.append(f"approval stays with team {manifest['team']}: release.yml does not run {GUARD_ACTION}v1 yet")
     current = gh(base, check=False)
+    # Deleting the reviewers rule CANCELS every deployment waiting for it ("Required reviewers
+    # protection rule deleted"; measured 2026-10-11: a publish job and a rehearsal failed with no
+    # step run). So reviewers are not lifted while a run in the repository is waiting.
+    lifting = not by_people and current is not None and not env_matches(current, team_id, blocked, False) \
+        and "required_reviewers" in {r.get("type") for r in current.get("protection_rules", [])}
+    if lifting and not cancel_waiting:
+        waiting = (gh(f"repos/{repo}/actions/runs?status=waiting&per_page=10", check=False) or {}).get("total_count", 0)
+        if waiting:
+            lines.append(f"approval stays with team {manifest['team']} for now: {waiting} run(s) wait for it, and "
+                         "lifting the reviewers would cancel them; re-run after they finish, or pass --cancel-waiting")
+            by_people = True
     if env_matches(current, team_id, blocked, by_people):
         lines.append(f"environment {env_name}: unchanged")
     elif by_people:
@@ -195,6 +206,8 @@ def main(argv: list[str]) -> int:
     target.add_argument("--all", action="store_true", help="every repository in the manifest")
     parser.add_argument("--apply", action="store_true", help="write; without it, a dry run")
     parser.add_argument("--manifest", type=Path, default=MANIFEST)
+    parser.add_argument("--cancel-waiting", action="store_true",
+                        help="lift reviewers even while runs wait for them (GitHub cancels those deployments)")
     args = parser.parse_args(argv)
 
     manifest = json.loads(args.manifest.read_text())
@@ -207,7 +220,7 @@ def main(argv: list[str]) -> int:
     team_id = gh(f"orgs/{org}/teams/{manifest['team']}")["id"]
     for repo in repos:
         print(repo)
-        for line in setup(repo, manifest["repos"][repo], manifest, team_id, args.apply):
+        for line in setup(repo, manifest["repos"][repo], manifest, team_id, args.apply, args.cancel_waiting):
             print("  " + line)
     if not args.apply:
         print("dry run: nothing was changed; add --apply to write")
