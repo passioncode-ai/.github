@@ -5,7 +5,13 @@
     scripts/setup-release-env.py --all --apply
 
 For each repository in release-signing/products.json:
-  * reviewers = the team named in the manifest (release-approvers);
+  * who lets a release through, by the manifest's `approval`: "checks" (operator, 2026-10-11) leaves
+    the environment without reviewers once the repository's release.yml runs
+    actions/release-guard (tag on main, CI green on its commit) — a repository whose release.yml
+    does not yet keeps its reviewers, so no product is ever left with neither; "people" keeps
+    the team named in the manifest (release-approvers) as reviewers;
+  * a tag ruleset `release-tags`: only that team may create, move or delete a tag matching the
+    pattern, since under "checks" pushing the tag is the release decision;
   * prevent_self_review from the manifest (false since 2026-10-03: any team member may approve,
     the tag's author included; true restores four eyes);
   * can_admins_bypass = false: an organization admin cannot skip the review either;
@@ -22,6 +28,7 @@ Design: docs/release-signing/DESIGN.md.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import subprocess
 import sys
@@ -43,21 +50,57 @@ def gh(*args: str, body: dict | None = None, check: bool = True) -> dict | None:
     return json.loads(proc.stdout or "{}")
 
 
-def desired_env(team_id: int, self_review_blocked: bool) -> dict:
-    return {"wait_timer": 0, "prevent_self_review": self_review_blocked, "can_admins_bypass": False,
-            "reviewers": [{"type": "Team", "id": team_id}],
+#: What a product's release.yml calls when it is gated by checks (actions/release-guard).
+GUARD_ACTION = "passioncode-ai/.github/actions/release-guard@"
+RULESET = "release-tags"
+
+
+def desired_env(team_id: int, self_review_blocked: bool, by_people: bool = True) -> dict:
+    return {"wait_timer": 0, "prevent_self_review": self_review_blocked if by_people else False,
+            "can_admins_bypass": False,
+            "reviewers": [{"type": "Team", "id": team_id}] if by_people else None,
             "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}}
 
 
-def env_matches(current: dict | None, team_id: int, self_review_blocked: bool) -> bool:
+def env_matches(current: dict | None, team_id: int, self_review_blocked: bool, by_people: bool = True) -> bool:
     if not current:
         return False
     rules = {r.get("type"): r for r in current.get("protection_rules", [])}
+    base = (current.get("can_admins_bypass") is False
+            and current.get("deployment_branch_policy") == {"protected_branches": False, "custom_branch_policies": True})
+    if not by_people:
+        return base and "required_reviewers" not in rules
     reviewers = rules.get("required_reviewers", {})
     ids = [(r.get("type"), (r.get("reviewer") or {}).get("id")) for r in reviewers.get("reviewers", [])]
-    return (ids == [("Team", team_id)] and reviewers.get("prevent_self_review") is self_review_blocked
-            and current.get("can_admins_bypass") is False
-            and current.get("deployment_branch_policy") == {"protected_branches": False, "custom_branch_policies": True})
+    return base and ids == [("Team", team_id)] and reviewers.get("prevent_self_review") is self_review_blocked
+
+
+def guarded(repo: str) -> bool:
+    """Whether the repository's release workflow on its default branch runs the release guard."""
+    doc = gh(f"repos/{repo}/contents/.github/workflows/release.yml", check=False) or {}
+    try:
+        text = base64.b64decode(doc.get("content", "")).decode("utf-8", "replace")
+    except ValueError:
+        return False
+    return GUARD_ACTION in text
+
+
+def desired_ruleset(team_id: int, pattern: str) -> dict:
+    return {"name": RULESET, "target": "tag", "enforcement": "active",
+            "conditions": {"ref_name": {"include": [f"refs/tags/{pattern}"], "exclude": []}},
+            "rules": [{"type": "creation"}, {"type": "update"}, {"type": "deletion"}],
+            "bypass_actors": [{"actor_id": team_id, "actor_type": "Team", "bypass_mode": "always"}]}
+
+
+def ruleset_matches(current: dict | None, wanted: dict) -> bool:
+    if not current:
+        return False
+    actors = [{k: a.get(k) for k in ("actor_id", "actor_type", "bypass_mode")} for a in current.get("bypass_actors") or []]
+    rules = sorted(r.get("type") for r in current.get("rules") or [])
+    cond = (current.get("conditions") or {}).get("ref_name") or {}
+    return (current.get("target") == "tag" and current.get("enforcement") == "active"
+            and rules == sorted(r["type"] for r in wanted["rules"]) and actors == wanted["bypass_actors"]
+            and cond.get("include") == wanted["conditions"]["ref_name"]["include"] and not cond.get("exclude"))
 
 
 def desired_vars(conf: dict, manifest: dict) -> dict[str, str]:
@@ -97,13 +140,33 @@ def setup(repo: str, conf: dict, manifest: dict, team_id: int, apply: bool) -> l
     # release they started. The manifest's `prevent_self_review` carries it; true restores the
     # four-eyes rule.
     blocked = bool(manifest.get("prevent_self_review", True))
+    by_checks = manifest.get("approval", "people") == "checks"
+    by_people = not (by_checks and guarded(repo))
+    if by_checks and by_people:
+        lines.append(f"approval stays with team {manifest['team']}: release.yml does not run {GUARD_ACTION}v1 yet")
     current = gh(base, check=False)
-    if env_matches(current, team_id, blocked):
+    if env_matches(current, team_id, blocked, by_people):
         lines.append(f"environment {env_name}: unchanged")
-    else:
+    elif by_people:
         act(f"set environment {env_name}: reviewers team {manifest['team']}, "
             f"{'no self-review' if blocked else 'self-review allowed'}, no admin bypass, tags only",
             lambda: gh("-X", "PUT", base, body=desired_env(team_id, blocked)))
+    else:
+        act(f"set environment {env_name}: approved by checks (release-guard), no reviewers, no admin bypass, tags only",
+            lambda: gh("-X", "PUT", base, body=desired_env(team_id, blocked, by_people=False)))
+
+    wanted_rules = desired_ruleset(team_id, pattern)
+    found = next((r for r in gh(f"repos/{repo}/rulesets", check=False) or [] if isinstance(r, dict)
+                  and r.get("name") == RULESET), None)
+    current_rules = gh(f"repos/{repo}/rulesets/{found['id']}", check=False) if found else None
+    if ruleset_matches(current_rules, wanted_rules):
+        lines.append(f"tag ruleset {RULESET}: unchanged")
+    elif found:
+        act(f"update tag ruleset {RULESET}: only team {manifest['team']} creates, moves or deletes {pattern} tags",
+            lambda: gh("-X", "PUT", f"repos/{repo}/rulesets/{found['id']}", body=wanted_rules))
+    else:
+        act(f"create tag ruleset {RULESET}: only team {manifest['team']} creates, moves or deletes {pattern} tags",
+            lambda: gh("-X", "POST", f"repos/{repo}/rulesets", body=wanted_rules))
 
     policies = (gh(f"{base}/deployment-branch-policies", check=False) or {}).get("branch_policies", [])
     if any(p.get("name") == pattern and p.get("type") == "tag" for p in policies):

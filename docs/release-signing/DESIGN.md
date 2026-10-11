@@ -9,7 +9,8 @@ attestations), Azure's `artifact-signing-action` and a read-only App Store Conne
 ```
 product repository (e.g. fabric-dashboards)
   .github/workflows/release.yml          on: push tags v*  (+ workflow_dispatch rehearsal, publish=false)
-    job build-macos   runs-on macos-latest   environment: release   ← approval happens here
+    job guard         runs-on ubuntu-latest  uses actions/release-guard@v1   ← approval happens here
+    job build-macos   needs guard            environment: release
       uses passioncode-ai/.github/actions/apple-signing@v1       temp keychain + CI Developer ID
       run  <the product's own build, told the identity by env>
       uses passioncode-ai/.github/actions/notarize@v1            notarytool + staple + spctl
@@ -23,16 +24,27 @@ product repository (e.g. fabric-dashboards)
   Tauri and `swift build` each sign differently. The shared parts are what is the same everywhere:
   the keychain, notarization, attestation, checksums and publishing. Each is a composite action
   pinned at `@v1`.
-- **The approval gate is the `environment: release` on a product's signing job.** A job in a
+- **The keys sit in the `environment: release` on a product's signing jobs.** A job in a
   reusable workflow that names an environment gets the caller repository's environment, with its
   secrets and protection rules (GitHub docs, "Reuse workflows"). So each product has its own
-  approvers and keys, while the code lives in one place.
-- **Approvals.** Jobs waiting at the same moment are approved with one review. `publish` runs
-  later and needs its own click, because it holds the GPG key. That makes two clicks per release.
+  keys, while the code lives in one place.
+- **Approval by checks (operator, 2026-10-11; supersedes the click-per-gate rule below).** Two
+  clicks per release left finished, signed builds waiting for hours because nobody saw the request.
+  Now the product's `guard` job runs `actions/release-guard@v1` and every job that names
+  `environment: release` needs it. The guard passes a tag only when `main` contains the tagged
+  commit and each CI workflow the product lists concluded `success` on that exact commit; with no
+  run it starts one on the tag (`workflow_dispatch`) and waits (default 60 min), and anything else
+  refuses with the reason and the run's link. The environment then has no reviewers
+  (`products.json` `"approval": "checks"`); `scripts/setup-release-env.py` lifts them only in a
+  repository whose `release.yml` on its default branch runs the guard, so no product is ever left
+  with neither. Pushing a `v*` tag is the release decision, so the tag ruleset `release-tags`
+  lets only team `release-approvers` create, move or delete one. `"approval": "people"` restores
+  the reviewers everywhere.
 
 ## The `release` environment (per product repository)
 
-- `reviewers`: team `release-approvers` (sshlg, khurss, svlab93).
+- `reviewers`: none under `"approval": "checks"` once `release.yml` runs the guard; otherwise team
+  `release-approvers` (sshlg, khurss, svlab93).
 - `prevent_self_review`: from `products.json`; `false` since the operator's amendment of D5
   (any member may approve, the author included).
 - `can_admins_bypass: false`: an organization admin cannot skip the review either; otherwise the
@@ -43,8 +55,13 @@ product repository (e.g. fabric-dashboards)
 - Secrets, set by `scripts/sync-release-secrets.py` from the vault over stdin.
 - Variables (not secrets): `APPLE_TEAM_ID`, and `AZURE_*` for Switchboard.
 
-**Approval stays a person's act.** An agent acting with the operator's GitHub account could
-approve its own run; it never does. It starts the run and names where to approve.
+**An agent never approves a deployment with a person's account.** Where reviewers remain (a
+product without the guard, or `"approval": "people"`), the agent starts the run and names where to
+approve; under checks there is nothing to approve, and the agent watches the run and reports it.
+
+**Tag ruleset `release-tags`** (per product repository, `scripts/setup-release-env.py`): target
+`refs/tags/v*`, rules creation, update and deletion, bypass team `release-approvers` always. A
+workflow or a person outside the team cannot push, move or delete a release tag.
 
 ## Composite actions in `.github` (`@v1`)
 

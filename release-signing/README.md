@@ -1,9 +1,13 @@
 # Release signing — how every PassionCode.ai product is signed
 
 Released builds are signed **only in GitHub Actions**, in each product repository's protected
-`release` environment. They are released **only after someone from `release-approvers` approves**:
-a person looks at the run and clicks. The release's author may approve it (operator decision,
-2026-10-03; `prevent_self_review` in [products.json](products.json) turns four eyes back on). Nobody's laptop holds a release key.
+`release` environment. They are released **only when the checks pass** (operator decision,
+2026-10-11, `"approval": "checks"` in [products.json](products.json)): the product's `guard` job
+(`actions/release-guard@v1`) lets the signing jobs start only when `main` contains the tagged
+commit and the product's CI passed on that exact commit. Nobody clicks. Only a member of
+`release-approvers` can push a `v*` tag (ruleset `release-tags`), so pushing the tag is the release
+decision. A product whose `release.yml` has no guard yet still waits for a person from that team;
+`"approval": "people"` brings the click back everywhere. Nobody's laptop holds a release key.
 Decisions and design: [docs/release-signing/](../docs/release-signing/BRIEF.md).
 
 ## What a release looks like
@@ -11,10 +15,12 @@ Decisions and design: [docs/release-signing/](../docs/release-signing/BRIEF.md).
 1. Merge the release pull request (version bump, CHANGELOG section) through the repository's
    required checks.
 2. Push the tag: `git tag -a vX.Y.Z <merge commit> -m … && git push origin vX.Y.Z`.
-3. The product's `release.yml` starts. Its signing jobs wait for the `release` environment.
-4. Someone from `release-approvers` opens the run and approves ("Review deployments" →
-   `release` → "Approve and deploy"). The jobs build, sign, notarize, staple and assess. The `publish`
-   job waits for a second approval, because it holds the GPG key.
+3. The product's `release.yml` starts. Its `guard` job checks the tag against `main` and the CI
+   run on that commit (starting one when none ran, and waiting for it); a refusal names the reason
+   and the run to fix.
+4. The jobs build, sign, notarize, staple and assess, then `publish` runs, with no click. (In a
+   product without the guard, someone from `release-approvers` approves "Review deployments" →
+   `release` → "Approve and deploy", and `publish` waits for a second approval.)
 5. `publish` attests every file (Sigstore), writes `SHA256SUMS` and `SHA256SUMS.asc`, and
    publishes the release. A published release is never rewritten: a fix is a new tag.
 
@@ -285,10 +291,11 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
   a branch) is a debug build. It is never published or attached to a release.
 - Never print, log or commit a key, a `.p12`, a password or a token. Values move over stdin
   (`vault.py put`, `gh secret set`) and nothing else.
-- **Approvals.** An approval is the operator's call. On 2026-10-03 the operator told the
-  agent to approve rehearsals and releases itself. It does so with the comment "approved on the
-  operator's explicit instruction". Without such an instruction, an agent starts the run and says
-  where to approve.
+- **Approvals.** Since 2026-10-11 the checks approve (`actions/release-guard`); an agent pushes
+  the tag, watches the run and reports the published release. Where a product still has
+  reviewers, the 2026-10-03 instruction stands: the agent may approve with the comment "approved
+  on the operator's explicit instruction"; otherwise it starts the run and says where to approve.
+  A guard refusal is fixed at its cause (merge to `main`, make CI pass), never worked around.
 - **Default branches** cannot be deleted or force-pushed. `scripts/protect-default-branches.py
   --apply` gives every repository the ruleset `protect-default-branch` (`deletion` +
   `non_fast_forward` on `~DEFAULT_BRANCH`, no bypass). Run it for a new repository too.

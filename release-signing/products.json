@@ -4,6 +4,8 @@
   "team": "release-approvers",
   "tag_pattern": "v*",
   "prevent_self_review": false,
+  "approval": "checks",
+  "approval_comment": "Who lets a tag release through (operator, 2026-10-11): \"checks\" = actions/release-guard in the product's release.yml (tag on main, CI green on that commit) and no reviewers on the environment; a repository whose release.yml lacks the guard keeps the team as reviewers. \"people\" = the team approves every release. Pushing a v* tag is limited to the team by the release-tags ruleset in both modes.",
   "groups": {
     "apple": [
       "APPLE_DEVELOPER_ID_P12_B64",
