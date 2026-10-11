@@ -39,6 +39,16 @@ SCRIPT = textwrap.dedent('''\
             print(json.dumps({{"branch_policies": state.get("policies", [])}})); sys.exit(0)
         if "/variables" in path and method == "GET":
             print(json.dumps({{"variables": state.get("variables", [])}})); sys.exit(0)
+        if path.endswith("/rulesets") and method == "GET":
+            print(json.dumps([{{"id": r["id"], "name": r["name"]}} for r in state.get("rulesets", [])])); sys.exit(0)
+        if "/rulesets/" in path and method == "GET":
+            rid = int(path.rsplit("/", 1)[1])
+            print(json.dumps(next(r for r in state.get("rulesets", []) if r["id"] == rid))); sys.exit(0)
+        if path.endswith("/contents/.github/workflows/release.yml") and method == "GET":
+            if "release_yml" not in state:
+                print(json.dumps({{"message": "Not Found"}})); sys.exit(1)
+            import base64
+            print(json.dumps({{"content": base64.b64encode(state["release_yml"].encode()).decode()}})); sys.exit(0)
         if path.endswith("/environments/release") and method == "GET":
             if state.get("env"):
                 print(json.dumps(state["env"])); sys.exit(0)

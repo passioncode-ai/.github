@@ -39,6 +39,13 @@ def mutating(calls: list[dict]) -> list[dict]:
     return out
 
 
+RULESET_42 = {"id": 9, "name": "release-tags", "target": "tag", "enforcement": "active",
+              "conditions": {"ref_name": {"include": ["refs/tags/v*"], "exclude": []}},
+              "rules": [{"type": "creation"}, {"type": "update"}, {"type": "deletion"}],
+              "bypass_actors": [{"actor_id": 42, "actor_type": "Team", "bypass_mode": "always"}]}
+GUARDED_YML = "jobs:\n  guard:\n    steps:\n      - uses: passioncode-ai/.github/actions/release-guard@v1\n"
+
+
 class SetupReleaseEnv(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -95,6 +102,7 @@ class SetupReleaseEnv(unittest.TestCase):
                                           "reviewers": [{"type": "Team", "reviewer": {"id": 42}}]}],
                     "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}},
             "policies": [{"name": "v*", "type": "tag"}],
+            "rulesets": [RULESET_42],
             "variables": [{"name": "APPLE_TEAM_ID", "value": "KJ35UYYL22"},
                           # Dashboards ships for Windows: the shared Artifact Signing account's too.
                           {"name": "AZURE_SIGNING_ENABLED", "value": json.loads(MANIFEST.read_text())["repos"][REPO]["vars"]["AZURE_SIGNING_ENABLED"]},
@@ -105,6 +113,50 @@ class SetupReleaseEnv(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(mutating(fakegh.calls(self.tmp)), [], result.stdout)
         self.assertIn("unchanged", result.stdout)
+
+    def test_checks_lift_the_reviewers_only_where_release_yml_runs_the_guard(self):
+        env = fakegh.install(self.tmp, {"team_id": 42, "team_repos": [REPO], "release_yml": GUARDED_YML})
+        result = run(SETUP, ["--repo", REPO, "--apply"], env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        put = next(c for c in mutating(fakegh.calls(self.tmp)) if "PUT" in c["argv"] and c["argv"][-3].endswith("/environments/release"))
+        body = json.loads(put["stdin"])
+        self.assertIsNone(body["reviewers"])
+        self.assertIs(body["can_admins_bypass"], False)
+        self.assertIn("approved by checks", result.stdout)
+
+    def test_without_the_guard_the_team_keeps_approving(self):
+        env = fakegh.install(self.tmp, {"team_id": 42, "team_repos": [REPO], "release_yml": "jobs:\n  macos: {}\n"})
+        result = run(SETUP, ["--repo", REPO, "--apply"], env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        put = next(c for c in mutating(fakegh.calls(self.tmp)) if "PUT" in c["argv"] and c["argv"][-3].endswith("/environments/release"))
+        self.assertEqual(json.loads(put["stdin"])["reviewers"], [{"type": "Team", "id": 42}])
+        self.assertIn("approval stays with team", result.stdout)
+
+    def test_only_the_team_may_push_a_release_tag(self):
+        env = fakegh.install(self.tmp, {"team_id": 42})
+        result = run(SETUP, ["--repo", REPO, "--apply"], env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        post = next(c for c in mutating(fakegh.calls(self.tmp)) if c["argv"][-3].endswith(f"repos/{REPO}/rulesets"))
+        body = json.loads(post["stdin"])
+        self.assertEqual({k: body[k] for k in ("name", "target", "enforcement")},
+                         {"name": "release-tags", "target": "tag", "enforcement": "active"})
+        self.assertEqual(body["conditions"]["ref_name"]["include"], ["refs/tags/v*"])
+        self.assertEqual(sorted(r["type"] for r in body["rules"]), ["creation", "deletion", "update"])
+        self.assertEqual(body["bypass_actors"], [{"actor_id": 42, "actor_type": "Team", "bypass_mode": "always"}])
+
+    def test_checks_mode_is_idempotent_too(self):
+        manifest = json.loads(MANIFEST.read_text())
+        state = {"team_id": 42, "team_repos": [REPO], "release_yml": GUARDED_YML, "rulesets": [RULESET_42],
+                 "env": {"name": "release", "can_admins_bypass": False, "protection_rules": [{"type": "branch_policy"}],
+                         "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}},
+                 "policies": [{"name": "v*", "type": "tag"}],
+                 "variables": [{"name": k, "value": v} for k, v in {
+                     **manifest["repos"][REPO]["vars"], "AZURE_SIGNING_ENDPOINT": "https://neu.codesigning.azure.net/",
+                     "AZURE_SIGNING_ACCOUNT": "passioncodesigning", "AZURE_CERTIFICATE_PROFILE": "passioncode-public-trust"}.items()]}
+        env = fakegh.install(self.tmp, state)
+        result = run(SETUP, ["--repo", REPO, "--apply"], env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(mutating(fakegh.calls(self.tmp)), [], result.stdout)
 
     def test_a_repository_outside_the_manifest_is_refused(self):
         env = fakegh.install(self.tmp, {"team_id": 42})

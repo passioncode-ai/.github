@@ -1,0 +1,49 @@
+name: Release guard
+description: >
+  Let a tag release sign and publish only when the tag is on main and the product's CI passed on
+  that exact commit; the automatic replacement for a person's approval of the `release`
+  environment (docs/release-signing/DESIGN.md, "Approval by checks"). Run it in a `guard` job on
+  ubuntu with `permissions: contents: read, actions: write` (write only to start a missing CI run;
+  `actions: read` with `dispatch: "false"`), and make every job that names `environment: release`
+  need that job. A ref that is not a tag passes as a rehearsal.
+inputs:
+  workflows:
+    description: >
+      CI workflow files that must succeed on the tagged commit, one per line (for example
+      "ci.yml"). Empty when the release workflow runs its own gate before signing.
+    required: false
+    default: ""
+  publish:
+    description: >
+      Whether this run publishes; pass `github.event_name == 'push' || inputs.publish`. A
+      rehearsal (false) passes without the main and CI checks, since it publishes nothing.
+    required: false
+    default: "true"
+  dispatch:
+    description: Start a listed workflow on the tag when none ran on the commit; it must accept workflow_dispatch
+    required: false
+    default: "true"
+  timeout-minutes:
+    description: How long to wait for the CI runs before refusing
+    required: false
+    default: "60"
+  main:
+    description: The branch that must contain the tagged commit
+    required: false
+    default: main
+runs:
+  using: composite
+  steps:
+    - name: Tag on main, CI green on its commit
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        REF: ${{ github.ref }}
+        SHA: ${{ github.sha }}
+        MAIN: ${{ inputs.main }}
+        WORKFLOWS: ${{ inputs.workflows }}
+        DISPATCH: ${{ inputs.dispatch }}
+        PUBLISH: ${{ inputs.publish }}
+        TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
+      run: python3 "$GITHUB_ACTION_PATH/guard.py"
