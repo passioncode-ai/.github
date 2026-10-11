@@ -39,6 +39,8 @@ SCRIPT = textwrap.dedent('''\
             print(json.dumps({{"branch_policies": state.get("policies", [])}})); sys.exit(0)
         if "/variables" in path and method == "GET":
             print(json.dumps({{"variables": state.get("variables", [])}})); sys.exit(0)
+        if "/actions/runs" in path and method == "GET":
+            print(json.dumps({{"total_count": state.get("waiting_runs", 0), "workflow_runs": []}})); sys.exit(0)
         if path.endswith("/rulesets") and method == "GET":
             print(json.dumps([{{"id": r["id"], "name": r["name"]}} for r in state.get("rulesets", [])])); sys.exit(0)
         if "/rulesets/" in path and method == "GET":

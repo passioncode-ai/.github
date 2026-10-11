@@ -287,6 +287,12 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
 
 ## Rules for agents and people
 
+- **Lifting reviewers cancels what waits for them.** Deleting the environment's reviewers rule cancels every
+  deployment waiting on it ("Required reviewers protection rule deleted"): on 2026-10-11 Observatory's and
+  Dashboards' `publish` and an Inbox rehearsal failed with no step run, and came back with
+  `gh run rerun <id> --failed`. `scripts/setup-release-env.py` therefore keeps the reviewers while a run waits,
+  unless `--cancel-waiting` is given.
+
 - A build signed anywhere other than the `release` environment (a laptop, a fork, a dispatch on
   a branch) is a debug build. It is never published or attached to a release.
 - Never print, log or commit a key, a `.p12`, a password or a token. Values move over stdin

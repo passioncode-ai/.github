@@ -124,6 +124,22 @@ class SetupReleaseEnv(unittest.TestCase):
         self.assertIs(body["can_admins_bypass"], False)
         self.assertIn("approved by checks", result.stdout)
 
+    def test_reviewers_stay_while_a_run_waits_for_them(self):
+        people = {"name": "release", "can_admins_bypass": False,
+                  "protection_rules": [{"type": "required_reviewers", "prevent_self_review": False,
+                                        "reviewers": [{"type": "Team", "reviewer": {"id": 42}}]}],
+                  "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}}
+        state = {"team_id": 42, "team_repos": [REPO], "release_yml": GUARDED_YML, "env": people, "waiting_runs": 1}
+        env = fakegh.install(self.tmp, state)
+        result = run(SETUP, ["--repo", REPO, "--apply"], env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse([c for c in mutating(fakegh.calls(self.tmp)) if c["argv"][-3].endswith("/environments/release")])
+        self.assertIn("would cancel them", result.stdout)
+        forced = fakegh.install(self.tmp, state)
+        result = run(SETUP, ["--repo", REPO, "--apply", "--cancel-waiting"], forced)
+        put = [c for c in mutating(fakegh.calls(self.tmp)) if "PUT" in c["argv"] and c["argv"][-3].endswith("/environments/release")]
+        self.assertIsNone(json.loads(put[-1]["stdin"])["reviewers"])
+
     def test_without_the_guard_the_team_keeps_approving(self):
         env = fakegh.install(self.tmp, {"team_id": 42, "team_repos": [REPO], "release_yml": "jobs:\n  macos: {}\n"})
         result = run(SETUP, ["--repo", REPO, "--apply"], env)
