@@ -85,6 +85,7 @@ release stays a draft until every attestation and the signature exist, then it i
 | same | `RELEASE_GPG_PRIVATE_KEY_B64`, `RELEASE_GPG_PASSPHRASE` | The organization release key (ed25519, sign-only, 3-year expiry). Its public key is published in `.github/release-signing/` and on the website | Every product |
 | `apple-publisher-kj35uyyl22/prod` (existing) | `ASC_API_KEY_P8_B64`, `ASC_KEY_ID`, `ASC_ISSUER_ID` | The team's App Store Connect API key, the one used today | Every Apple product |
 | `fabric-vr/prod` | `ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | Fabric VR's release keystore (D8) | fabric-vr |
+| `relay/prod` | `CLOUDFLARE_API_TOKEN_WORKERS`, `CLOUDFLARE_API_TOKEN_ROUTES`, `CLOUDFLARE_ACCOUNT_ID` | The relay's hosted deploy: scripts token, routes token (zone `passioncode.ai`), account id; door-issued (`cloudflare.py`) | relay |
 
 Every value enters GitHub on stdin (`gh secret set NAME --env release --repo R`). The sync tool
 prints names and a fingerprint (an `sha256` prefix), never a value. It is idempotent and does a
