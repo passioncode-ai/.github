@@ -29,6 +29,11 @@
       "ANDROID_KEYSTORE_PASSWORD",
       "ANDROID_KEY_ALIAS",
       "ANDROID_KEY_PASSWORD"
+    ],
+    "cloudflare": [
+      "CLOUDFLARE_API_TOKEN_WORKERS",
+      "CLOUDFLARE_API_TOKEN_ROUTES",
+      "CLOUDFLARE_ACCOUNT_ID"
     ]
   },
   "azure_signing": {
@@ -100,6 +105,13 @@
     "passioncode-ai/fabric-vr": {
       "groups": [
         "android",
+        "gpg"
+      ],
+      "vars": {}
+    },
+    "passioncode-ai/relay": {
+      "groups": [
+        "cloudflare",
         "gpg"
       ],
       "vars": {}

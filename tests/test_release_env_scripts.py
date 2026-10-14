@@ -223,6 +223,23 @@ class SyncReleaseSecrets(unittest.TestCase):
         strict = run(SYNC, ["--repo", REPO, "--apply", "--strict"], self.env, SECRET_VALUES)
         self.assertEqual(strict.returncode, 2)
 
+    def test_every_group_a_repository_names_is_declared(self):
+        # names_for() would raise KeyError mid-run on a group the manifest does not declare.
+        manifest = json.loads(MANIFEST.read_text())
+        for repo, conf in manifest["repos"].items():
+            for group in conf["groups"]:
+                self.assertIn(group, manifest["groups"], f"{repo} names undeclared group {group}")
+
+    def test_the_relay_gets_its_deploy_names_and_the_signing_key(self):
+        # The relay's release deploys a Worker (scripts token), attaches its route (routes
+        # token) and signs SHA256SUMS through release-publish (the GPG pair); names only.
+        result = run(SYNC, ["--repo", "passioncode-ai/relay"], self.env, {})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for name in ("CLOUDFLARE_API_TOKEN_WORKERS", "CLOUDFLARE_API_TOKEN_ROUTES", "CLOUDFLARE_ACCOUNT_ID",
+                     "RELEASE_GPG_PRIVATE_KEY_B64", "RELEASE_GPG_PASSPHRASE"):
+            self.assertIn(f"  {name}: absent", result.stdout)
+        self.assertNotIn("APPLE_", result.stdout)
+
     def test_an_empty_value_is_never_sent(self):
         result = run(SYNC, ["--repo", REPO, "--apply"], self.env, {**SECRET_VALUES, "ASC_KEY_ID": ""})
         names = [c["argv"][2] for c in mutating(fakegh.calls(self.tmp))]
