@@ -240,6 +240,14 @@ class Actions(unittest.TestCase):
         text = (ROOT / "actions/windows-signing/action.yml").read_text()
         self.assertLess(text.index("artifact-signing-action"), text.index("verify/verify.ps1"))
 
+    def test_the_signer_never_restores_a_dependency_cache(self):
+        # The Azure action caches its PowerShell module under a key that names only the module's
+        # version, so an x64 job restored the module an arm64 job had saved minutes before and
+        # `Invoke-ArtifactSigning` was not recognized (a product's release run, 2026-10-24, two
+        # attempts; the third passed once that cache entry was deleted).
+        text = (ROOT / "actions/windows-signing/action.yml").read_text()
+        self.assertIn("cache-dependencies: false", text)
+
     def test_the_verification_requires_a_timestamp(self):
         text = (ROOT / "actions/windows-signing/verify/verify.ps1").read_text()
         self.assertIn("TimeStamperCertificate", text)

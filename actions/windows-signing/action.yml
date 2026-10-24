@@ -86,6 +86,9 @@ runs:
         files-folder: ${{ inputs.files-folder }}
         files-folder-filter: ${{ inputs.files-folder != '' && inputs.files-folder-filter || '' }}
         file-digest: SHA256
+        # Its dependency cache is keyed by version alone, so a job on one architecture restored
+        # the module another had saved and could not load it; download on every run instead.
+        cache-dependencies: false
         timestamp-rfc3161: http://timestamp.acs.microsoft.com
         timestamp-digest: SHA256
         exclude-environment-credential: true
