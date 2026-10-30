@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -247,6 +248,33 @@ class Actions(unittest.TestCase):
         # attempts; the third passed once that cache entry was deleted).
         text = (ROOT / "actions/windows-signing/action.yml").read_text()
         self.assertIn("cache-dependencies: false", text)
+
+    def test_a_failed_module_download_is_signed_once_more_after_a_pause(self):
+        # Issue #44: with no cache the module is downloaded on every run, and a PowerShell Gallery
+        # that does not answer failed products' release jobs (2026-10-27, four runs) before anything
+        # was signed. The first try may fail; the second runs only then, after a pause, and is not
+        # allowed to fail; both sign with the same inputs; the verification follows both.
+        if not shutil.which("ruby"):
+            self.skipTest("ruby is not installed")
+        ruby = 'require "yaml"; require "json"; puts JSON.generate(YAML.safe_load(File.read(ARGV[0])))'
+        out = subprocess.run(["ruby", "-e", ruby, str(ROOT / "actions/windows-signing/action.yml")], capture_output=True, text=True, check=True).stdout
+        steps = json.loads(out)["runs"]["steps"]
+        signers = [s for s in steps if str(s.get("uses", "")).startswith("Azure/artifact-signing-action@")]
+        self.assertEqual([s.get("id") for s in signers], ["sign1", "sign2"])
+        first, second = signers
+        self.assertIs(first.get("continue-on-error"), True)
+        self.assertNotIn("if", first)
+        self.assertEqual(second.get("if"), "steps.sign1.outcome == 'failure'")
+        self.assertNotIn("continue-on-error", second)
+        self.assertEqual(first["uses"], second["uses"])
+        self.assertEqual(first["with"], second["with"])
+        wait = steps[steps.index(first) + 1]
+        self.assertEqual(wait.get("if"), "steps.sign1.outcome == 'failure'")
+        self.assertIn("Start-Sleep -Seconds 60", wait["run"])
+        self.assertIs(steps[steps.index(wait) + 1], second)
+        verify = next(i for i, s in enumerate(steps) if "verify/verify.ps1" in str(s.get("run", "")))
+        self.assertGreater(verify, steps.index(second))
+        self.assertNotIn("if", steps[verify])
 
     def test_the_verification_requires_a_timestamp(self):
         text = (ROOT / "actions/windows-signing/verify/verify.ps1").read_text()

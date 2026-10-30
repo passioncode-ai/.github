@@ -220,6 +220,10 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
   `v0.6.7-rc.1`; fixed in fabric-dashboards #64).
 - **Only the job's own sign-in signs.** `windows-signing` excludes every other Azure credential
   the runner might carry; never add a client secret.
+- **The signing module is downloaded on every run, so a silent PowerShell Gallery fails it.**
+  `windows-signing` keeps the Azure action's cache off (#43) and, when the first try fails, signs
+  once more after 60 s (#44, from `v1.4.0`); the verification still fails the job unless every file
+  is Valid. A product on an older tag needs its own retry.
 
 ## Adding a product
 
