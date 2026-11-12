@@ -6,6 +6,21 @@ repository's own file wins. It is written for people and for coding agents alike
 reads the knowledge base, the repository's `AGENTS.md` and this file before its first edit, in
 every repository, every time.**
 
+## 0. Before every change: the course check
+
+Before any change (code, docs, a release, a deploy), check the course, and after it bring the
+plan up to date. The rule is
+[rules §0](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/rules.md#0-the-course-check-the-plan-and-the-north-star-before-every-change);
+read it there, it is not copied here. It points to:
+
+- the [North Star](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/north-star.md#0-the-measure):
+  the metric, its guardrails and its open gaps;
+- the [one plan in waves](https://github.com/passioncode-ai/fabric-workspace/blob/main/docs/plans/2026-11-11-unified/README.md)
+  and the [roadmap](https://github.com/passioncode-ai/fabric-workspace/blob/main/knowledge/roadmap.md).
+
+Outside contributors, who cannot open the knowledge base, describe in the pull request what the
+change is for; a maintainer links it to the plan.
+
 ## 1. Read first, in this order
 
 1. **The knowledge base**: `fabric-workspace/knowledge/` in your clone (org-index
