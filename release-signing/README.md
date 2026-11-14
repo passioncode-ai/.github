@@ -317,4 +317,10 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
   - On GitHub Free, a private repository cannot hold rulesets. `fabric-workspace` and
     `org-index` stay unprotected until the organization moves to Team or they become public.
   - The script reports them as NOT PROTECTED.
+- **Release tags of this repository** cannot be deleted, and a published `vX.Y.Z` never moves.
+  `scripts/protect-release-tags.py --apply` keeps three tag rulesets on `passioncode-ai/.github`:
+  `release-tags-no-deletion` (`deletion` on `refs/tags/v*`, no bypass), `release-tags-immutable`
+  (`update` on `refs/tags/v*` except `v1`, no bypass) and `floating-major-tag` (`update` on `v1`,
+  bypass: organization admins). Only an organization admin moves `v1`, and only to a commit that
+  already carries a `v1.X.Y` tag with a green self-test. Creating a new tag stays open.
 - Never rewrite a published release. A wrong release is fixed with a new tag.
