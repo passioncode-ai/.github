@@ -77,9 +77,12 @@ class ReleaseGuard(unittest.TestCase):
         (self.tmp / "state.json").write_text(json.dumps(state))
         env = {"PATH": self.path, "FAKE_GH_STATE": str(self.tmp / "state.json"),
                "FAKE_GH_LOG": str(self.tmp / "calls.jsonl"), "REPO": REPO, "REF": ref, "SHA": SHA,
-               "WORKFLOWS": workflows, "POLL_SECONDS": "0", "GRACE_SECONDS": "0", "TIMEOUT_MINUTES": "0.02",
+               "WORKFLOWS": workflows, "POLL_SECONDS": "0", "GRACE_SECONDS": "0",
+               # A test that waits for a scripted run to pass must not race the clock on a loaded
+               # machine (ORGPROFILE-07): it gets a minute; only the time-out test asks for less.
+               "TIMEOUT_MINUTES": "1",
                "GITHUB_STEP_SUMMARY": str(self.tmp / "summary.md"), **extra}
-        result = subprocess.run([sys.executable, str(GUARD)], env=env, capture_output=True, text=True, timeout=60)
+        result = subprocess.run([sys.executable, str(GUARD)], env=env, capture_output=True, text=True, timeout=120)
         return result, json.loads((self.tmp / "state.json").read_text())
 
     def test_a_tag_on_main_with_green_ci_passes(self):
@@ -135,7 +138,7 @@ class ReleaseGuard(unittest.TestCase):
         self.assertIn("concluded cancelled", result.stdout)
 
     def test_without_dispatch_a_missing_run_times_out_and_refuses(self):
-        result, state = self.guard({"runs": {"ci.yml": [[]]}}, DISPATCH="false")
+        result, state = self.guard({"runs": {"ci.yml": [[]]}}, DISPATCH="false", TIMEOUT_MINUTES="0.02")
         self.assertEqual(result.returncode, 1)
         self.assertEqual(state["dispatched"], [])
         self.assertIn("never ran", result.stdout)
