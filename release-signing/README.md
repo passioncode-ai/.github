@@ -323,4 +323,8 @@ says so: the receipt carries `windows_authenticode: NOT_SIGNED` and the release 
   (`update` on `refs/tags/v*` except `v1`, no bypass) and `floating-major-tag` (`update` on `v1`,
   bypass: organization admins). Only an organization admin moves `v1`, and only to a commit that
   already carries a `v1.X.Y` tag with a green self-test. Creating a new tag stays open.
+- **Every `v1.X.Y` release moves `v1` in the same release.** Products run `@v1`, so a release
+  that leaves `v1` behind never reaches them (`v1.3.2` and `v1.4.0` did, until 2026-11-10).
+  After pushing the tags, `scripts/check-floating-tag.py` must exit 0; the nightly self-test runs
+  it too and fails while `v1` is not on the newest `v1.X.Y` commit.
 - Never rewrite a published release. A wrong release is fixed with a new tag.

@@ -24,6 +24,9 @@ jobs:
           python-version: "3.12"
       - name: Script tests
         run: python -m unittest discover -s tests -v
+      - name: v1 follows the newest v1.X.Y release
+        if: runner.os == 'Linux'
+        run: python scripts/check-floating-tag.py
       - name: shellcheck
         if: runner.os == 'Linux'
         run: shellcheck actions/*/*.sh scripts/*.sh
