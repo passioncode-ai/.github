@@ -77,10 +77,25 @@ class SignSums(unittest.TestCase):
         self.assertNotEqual(check.returncode, 0)
 
     def test_the_passphrase_is_never_printed_and_the_key_home_is_gone(self):
-        before = set(Path("/tmp").glob("sums.*"))
-        r = self.run_script()
+        # Watch only the key home this run creates: a mktemp shim on PATH logs every directory the
+        # script makes, so another test run's /tmp/sums.* on the same machine is not counted as a
+        # leak (ORGPROFILE-09).
+        real_mktemp = shutil.which("mktemp")
+        self.assertIsNotNone(real_mktemp)
+        shim = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, shim, True)
+        log = shim / "made.log"
+        (shim / "mktemp").write_text(
+            f'#!/bin/bash\nout=$("{real_mktemp}" "$@") || exit $?\n'
+            f'printf "%s\\n" "$out" >> "{log}"\nprintf "%s\\n" "$out"\n')
+        (shim / "mktemp").chmod(0o755)
+        r = self.run_script(PATH=f"{shim}{os.pathsep}{os.environ['PATH']}")
+        self.assertEqual(r.returncode, 0, r.stderr)
         self.assertNotIn(PASSPHRASE, r.stdout + r.stderr)
-        self.assertEqual(set(Path("/tmp").glob("sums.*")) - before, set())
+        made = [Path(p) for p in log.read_text().split()] if log.exists() else []
+        homes = [p for p in made if p.name.startswith("sums.")]
+        self.assertTrue(homes, f"the script made no /tmp/sums.* key home: {made}")
+        self.assertEqual([p for p in homes if p.exists()], [])
 
     def test_a_missing_input_is_refused_by_name(self):
         r = self.run_script(RELEASE_GPG_PASSPHRASE="")
